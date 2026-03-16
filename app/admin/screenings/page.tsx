@@ -34,6 +34,7 @@ export default function AdminScreeningsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [deleteModal, setDeleteModal] = useState<{ show: boolean; id: string }>({ show: false, id: '' });
   const [toast, setToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const perPage = 8;
 
   useEffect(() => { setMounted(true); }, []);
@@ -117,9 +118,17 @@ export default function AdminScreeningsPage() {
     setTimeout(() => setToast({ show: false, message: '' }), 3000);
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
     await signOut();
     router.push('/login');
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false);
   };
 
   const getRiskColor = (risk: string) => {
@@ -174,6 +183,15 @@ export default function AdminScreeningsPage() {
         <Link href="/admin/screenings" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] bg-[rgba(168,85,247,0.1)] text-[#a855f7] border-l-2 border-[#a855f7] text-[0.88rem]">
           <span>📷</span> Screenings
         </Link>
+        <Link href="/admin/dentists" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
+          <span>🦷</span> Dentists
+        </Link>
+        <Link href="/admin/education" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
+          <span>📚</span> Education
+        </Link>
+        <Link href="/admin/announcements" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
+          <span>📣</span> Announcements
+        </Link>
         <div className="py-3 px-4 text-[0.68rem] tracking-[0.12em] uppercase text-[#666] mt-2">System</div>
         <Link href="/admin/model" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
           <span>🤖</span> Model Monitor
@@ -185,6 +203,36 @@ export default function AdminScreeningsPage() {
         <button onClick={handleLogout} className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors w-full text-left">
           <span>🚪</span> Log Out
         </button>
+
+        {/* Logout Confirmation Modal */}
+        {showLogoutModal && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-8">
+            <div className="bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] rounded-[16px] p-8 max-w-md w-full">
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[rgba(255,200,50,0.1)] flex items-center justify-center text-3xl">
+                  🚪
+                </div>
+                <h3 className="font-['Syne'] font-bold text-xl text-white mb-2">Log Out</h3>
+                <p className="text-[#888] text-[0.92rem] mb-6">Are you sure you want to log out?</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={cancelLogout}
+                    className="flex-1 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-white rounded-[10px] px-5 py-3 font-['Syne'] font-semibold text-[0.9rem] cursor-pointer hover:bg-[rgba(255,255,255,0.1)] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmLogout}
+                    className="flex-1 bg-[#f87171] text-white rounded-[10px] px-5 py-3 font-['Syne'] font-semibold text-[0.9rem] cursor-pointer hover:bg-[#ef4444] transition-colors"
+                  >
+                    Log Out
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mt-auto py-4 px-4 border-t border-[rgba(255,255,255,0.07)]">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-gradient-to-r from-[#a855f7] to-[#00e5ff] flex items-center justify-center font-bold text-[0.85rem] text-black">{userInitial}</div>
@@ -312,10 +360,10 @@ export default function AdminScreeningsPage() {
                 </div>
                 <div>
                   <div className="text-[0.82rem] font-['Syne'] font-bold" style={{ color: '#00e5ff' }}>
-                    {Math.round((s.confidence_score || 0) * 100)}%
+                    {s.confidence_score > 1 ? Math.round(s.confidence_score) : Math.round(s.confidence_score * 100)}%
                   </div>
                   <div className="h-0.5 bg-[rgba(255,255,255,0.06)] rounded mt-1 w-14 overflow-hidden">
-                    <div className="h-full rounded bg-gradient-to-r from-[#a855f7] to-[#00e5ff]" style={{ width: `${(s.confidence_score || 0) * 100}%` }}></div>
+                    <div className="h-full rounded bg-gradient-to-r from-[#a855f7] to-[#00e5ff]" style={{ width: `${s.confidence_score > 1 ? s.confidence_score : s.confidence_score * 100}%` }}></div>
                   </div>
                 </div>
                 <div className="text-[0.75rem] text-[#666]">

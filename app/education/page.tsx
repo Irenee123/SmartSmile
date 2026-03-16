@@ -18,78 +18,9 @@ interface Article {
   category: string;
   thumbnail: string;
   read_time: string;
-  date: string;
-  featured?: boolean;
+  created_at: string;
+  is_featured: boolean;
 }
-
-const defaultArticles: Article[] = [
-  {
-    id: '1',
-    title: 'Daily Oral Hygiene Routine for Optimal Health',
-    description: 'A consistent daily routine is the foundation of good oral health. Learn the exact steps for morning and night care.',
-    category: 'Oral Hygiene',
-    thumbnail: '🦷',
-    read_time: '5 min read',
-    date: 'Feb 20, 2026'
-  },
-  {
-    id: '2',
-    title: 'Early Signs of Tooth Decay You Shouldn\'t Ignore',
-    description: 'These visual and sensory warning signs often appear months before pain starts. Detect caries before they worsen.',
-    category: 'Tooth Decay',
-    thumbnail: '🔍',
-    read_time: '7 min read',
-    date: 'Feb 15, 2026'
-  },
-  {
-    id: '3',
-    title: 'The Bass Technique: How to Brush Correctly',
-    description: 'Most people brush incorrectly. The Bass method removes 30% more plaque than standard horizontal scrubbing.',
-    category: 'Brushing Tips',
-    thumbnail: '🪥',
-    read_time: '4 min read',
-    date: 'Feb 10, 2026'
-  },
-  {
-    id: '4',
-    title: 'Recognizing Gingivitis: Redness, Bleeding & What to Do',
-    description: 'Gingivitis affects nearly half the adult population. Spot it early and reverse it with these targeted steps.',
-    category: 'Gum Health',
-    thumbnail: '🌿',
-    read_time: '6 min read',
-    date: 'Feb 5, 2026'
-  },
-  {
-    id: '5',
-    title: 'How SmartSmile\'s AI Analyzes Your Dental Photos',
-    description: 'Understand what happens under the hood — from image preprocessing to CNN inference and risk scoring.',
-    category: 'AI Screening',
-    thumbnail: '🤖',
-    read_time: '8 min read',
-    date: 'Jan 28, 2026'
-  },
-  {
-    id: '6',
-    title: 'Foods That Protect (and Destroy) Your Teeth',
-    description: 'Not all foods are equal for dental health. Some actively strengthen enamel while others accelerate decay.',
-    category: 'Nutrition',
-    thumbnail: '🍎',
-    read_time: '5 min read',
-    date: 'Jan 22, 2026'
-  }
-];
-
-const getCategoryColor = (category: string) => {
-  switch (category) {
-    case 'Oral Hygiene': return 't-hygiene';
-    case 'Tooth Decay': return 't-decay';
-    case 'Brushing Tips': return 't-brush';
-    case 'Gum Health': return 't-gum';
-    case 'AI Screening': return 't-ai';
-    case 'Nutrition': return 't-nutrition';
-    default: return 't-hygiene';
-  }
-};
 
 export default function EducationPage() {
   const { user, loading: authLoading } = useAuth();
@@ -97,12 +28,28 @@ export default function EducationPage() {
   const [mounted, setMounted] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
-  const [articles, setArticles] = useState<Article[]>(defaultArticles);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loadingArticles, setLoadingArticles] = useState(true);
   const [openFaq, setOpenFaq] = useState<string | null>(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    fetchArticles();
+  }, []);
+
+  const fetchArticles = async () => {
+    setLoadingArticles(true);
+    const { data } = await supabase
+      .from('articles')
+      .select('*')
+      .order('created_at', { ascending: false });
+    setArticles(data || []);
+    setLoadingArticles(false);
+  };
 
   useEffect(() => {
     if (mounted && !authLoading && !user) {
@@ -118,12 +65,20 @@ export default function EducationPage() {
     }
   }, [mounted, authLoading, user, router]);
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
     await supabase.auth.signOut();
     router.push('/login');
   };
 
-  const categories = ['All', 'Oral Hygiene', 'Tooth Decay', 'Brushing Tips', 'Gum Health', 'AI Screening', 'Nutrition'];
+  const cancelLogout = () => {
+    setShowLogoutModal(false);
+  };
+
+  const categories = ['All', ...Array.from(new Set(articles.map(a => a.category)))];
 
   const filteredArticles = articles.filter(article => {
     const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -184,6 +139,35 @@ export default function EducationPage() {
           <span>🚪</span> Log Out
         </button>
         
+        {/* Logout Confirmation Modal */}
+        {showLogoutModal && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-8">
+            <div className="bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] rounded-[16px] p-8 max-w-md w-full">
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[rgba(255,200,50,0.1)] flex items-center justify-center text-3xl">
+                  🚪
+                </div>
+                <h3 className="font-['Syne'] font-bold text-xl text-white mb-2">Log Out</h3>
+                <p className="text-[#888] text-[0.92rem] mb-6">Are you sure you want to log out?</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={cancelLogout}
+                    className="flex-1 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-white rounded-[10px] px-5 py-3 font-['Syne'] font-semibold text-[0.9rem] cursor-pointer hover:bg-[rgba(255,255,255,0.1)] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmLogout}
+                    className="flex-1 bg-[#f87171] text-white rounded-[10px] px-5 py-3 font-['Syne'] font-semibold text-[0.9rem] cursor-pointer hover:bg-[#ef4444] transition-colors"
+                  >
+                    Log Out
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="mt-auto py-4 px-4 border-t border-[rgba(255,255,255,0.07)]">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-gradient-to-r from-[#00e5ff] to-[#a855f7] flex items-center justify-center font-bold text-[0.85rem] text-black">
@@ -230,19 +214,28 @@ export default function EducationPage() {
         </div>
 
         {/* Featured */}
-        <div 
-          className="bg-[#111] border rounded-[20px] p-8 mb-8 flex gap-8 items-center relative overflow-hidden cursor-pointer"
-          style={{ background: 'linear-gradient(135deg, rgba(0,229,255,0.06), rgba(168,85,247,0.04))', border: '1px solid rgba(0,229,255,0.15)', borderRadius: '20px', padding: '2rem', marginBottom: '2rem', display: 'flex', gap: '2rem', alignItems: 'center', position: 'relative', overflow: 'hidden' }}
-        >
-          <div style={{ position: 'absolute', top: '-60px', right: '-60px', width: '200px', height: '200px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,229,255,0.1), transparent 70%)' }}></div>
-          <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-[2.2rem]" style={{ width: '80px', height: '80px', minWidth: '80px', borderRadius: '16px', background: 'rgba(0,229,255,0.08)', border: '1px solid rgba(0,229,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem' }}>🦷</div>
-          <div>
-            <span className="text-[0.68rem] uppercase text-[#00e5ff] bg-[rgba(0,229,255,0.08)] border border-[rgba(0,229,255,0.15)] px-2 py-1 rounded-full mb-2 inline-block" style={{ display: 'inline-block', fontSize: '0.68rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#00e5ff', background: 'rgba(0,229,255,0.08)', border: '1px solid rgba(0,229,255,0.15)', padding: '0.2rem 0.6rem', borderRadius: '100px', marginBottom: '0.5rem' }}>Featured Article</span>
-            <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '1.15rem', marginBottom: '0.4rem' }}>The Complete Guide to Preventive Oral Health in 2026</h2>
-            <p className="text-[#666] text-[0.88rem]" style={{ color: '#666', fontSize: '0.88rem', lineHeight: 1.65, maxWidth: '500px' }}>Everything you need to know about maintaining excellent oral health — from daily habits to understanding your AI screening results and when to see a dentist.</p>
-            <div className="text-[#00e5ff] text-[0.83rem] font-semibold mt-3" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: '#00e5ff', fontSize: '0.83rem', fontWeight: 600, marginTop: '0.75rem' }}>Read Article →</div>
-          </div>
-        </div>
+        {(() => {
+          const featured = articles.find(a => a.is_featured);
+          if (!featured) return null;
+          return (
+            <div
+              className="bg-[#111] border rounded-[20px] p-8 mb-8 flex gap-8 items-center relative overflow-hidden cursor-pointer"
+              style={{ background: 'linear-gradient(135deg, rgba(0,229,255,0.06), rgba(168,85,247,0.04))', border: '1px solid rgba(0,229,255,0.15)', borderRadius: '20px', padding: '2rem', marginBottom: '2rem', display: 'flex', gap: '2rem', alignItems: 'center', position: 'relative', overflow: 'hidden' }}
+            >
+              <div style={{ position: 'absolute', top: '-60px', right: '-60px', width: '200px', height: '200px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,229,255,0.1), transparent 70%)' }}></div>
+              <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-[2.2rem]" style={{ width: '80px', height: '80px', minWidth: '80px', borderRadius: '16px', background: 'rgba(0,229,255,0.08)', border: '1px solid rgba(0,229,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem' }}>{featured.thumbnail}</div>
+              <div>
+                <span className="text-[0.68rem] uppercase text-[#00e5ff] bg-[rgba(0,229,255,0.08)] border border-[rgba(0,229,255,0.15)] px-2 py-1 rounded-full mb-2 inline-block" style={{ display: 'inline-block', fontSize: '0.68rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#00e5ff', background: 'rgba(0,229,255,0.08)', border: '1px solid rgba(0,229,255,0.15)', padding: '0.2rem 0.6rem', borderRadius: '100px', marginBottom: '0.5rem' }}>Featured Article</span>
+                <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '1.15rem', marginBottom: '0.4rem' }}>{featured.title}</h2>
+                <p className="text-[#666] text-[0.88rem]" style={{ color: '#666', fontSize: '0.88rem', lineHeight: 1.65, maxWidth: '500px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{featured.description}</p>
+                <div className="flex items-center gap-4 mt-3">
+                  <span style={{ color: '#666', fontSize: '0.83rem' }}>{featured.read_time}</span>
+                  <Link href={`/education/${featured.id}`} className="text-[#00e5ff] text-[0.83rem] font-semibold hover:opacity-75 transition-opacity">Read article →</Link>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Tips Banner */}
         <div className="grid grid-cols-4 gap-4 mb-8 bg-[#161616] border border-[rgba(255,255,255,0.07)] rounded-2xl p-6" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem', background: '#161616', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '1.5rem' }}>
@@ -271,28 +264,38 @@ export default function EducationPage() {
         {/* Articles Grid */}
         <div className="flex justify-between items-center mb-5">
           <h3 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '1rem', marginBottom: '1.2rem' }}>Latest Articles</h3>
-          <a href="#" className="text-[#00e5ff] text-[0.78rem] no-underline" style={{ fontSize: '0.78rem', color: '#00e5ff', textDecoration: 'none' }}>View all →</a>
+          <span className="text-[#666] text-[0.78rem]">{filteredArticles.length} article{filteredArticles.length !== 1 ? 's' : ''}</span>
         </div>
+        {loadingArticles ? (
+          <div className="text-center py-16 text-[#666] text-[0.88rem]">Loading articles...</div>
+        ) : filteredArticles.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="text-4xl mb-4 opacity-40">📚</div>
+            <p className="text-[#666] text-[0.88rem]">No articles available yet. Check back soon.</p>
+          </div>
+        ) : (
         <div className="grid grid-cols-3 gap-5 mb-10" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.2rem', marginBottom: '2.5rem' }}>
           {filteredArticles.map((article) => (
             <div key={article.id} className="bg-[#111] border border-[rgba(255,255,255,0.07)] rounded-[14px] overflow-hidden cursor-pointer transition-all hover:border-[rgba(0,229,255,0.2)] hover:-translate-y-0.5" style={{ background: '#111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', overflow: 'hidden', cursor: 'pointer', transition: '0.25s' }}>
               <div className="h-[110px] flex items-center justify-center text-[2.8rem] bg-[#161616] relative" style={{ height: '110px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.8rem', background: '#161616', position: 'relative' }}>
                 {article.thumbnail}
-                <span className={`absolute top-2 left-2 text-[0.65rem] uppercase px-2 py-1 rounded-full font-bold ${getCategoryColor(article.category)}`} style={{ position: 'absolute', top: '0.6rem', left: '0.6rem', fontSize: '0.65rem', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.2rem 0.55rem', borderRadius: '100px', fontWeight: 700, background: getCategoryColor(article.category) === 't-hygiene' ? 'rgba(0,229,255,0.12)' : getCategoryColor(article.category) === 't-decay' ? 'rgba(248,113,113,0.12)' : getCategoryColor(article.category) === 't-brush' ? 'rgba(168,85,247,0.12)' : getCategoryColor(article.category) === 't-gum' ? 'rgba(52,211,153,0.12)' : getCategoryColor(article.category) === 't-ai' ? 'rgba(251,191,36,0.12)' : 'rgba(249,115,22,0.12)', color: getCategoryColor(article.category) === 't-hygiene' ? '#00e5ff' : getCategoryColor(article.category) === 't-decay' ? '#f87171' : getCategoryColor(article.category) === 't-brush' ? '#a855f7' : getCategoryColor(article.category) === 't-gum' ? '#34d399' : getCategoryColor(article.category) === 't-ai' ? '#fbbf24' : '#f97316' }}>
+                <span className="absolute top-2 left-2 text-[0.65rem] uppercase px-2 py-1 rounded-full font-bold" style={{ position: 'absolute', top: '0.6rem', left: '0.6rem', fontSize: '0.65rem', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0.2rem 0.55rem', borderRadius: '100px', fontWeight: 700, background: 'rgba(0,229,255,0.12)', color: '#00e5ff' }}>
                   {article.category}
                 </span>
               </div>
               <div className="p-5" style={{ padding: '1.2rem' }}>
                 <h4 className="font-bold text-[0.9rem] mb-1" style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '0.9rem', lineHeight: 1.35, marginBottom: '0.4rem' }}>{article.title}</h4>
-                <p className="text-[#666] text-[0.78rem]" style={{ color: '#666', fontSize: '0.78rem', lineHeight: 1.55 }}>{article.description}</p>
+                <p className="text-[#666] text-[0.78rem]" style={{ color: '#666', fontSize: '0.78rem', lineHeight: 1.55, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{article.description}</p>
+                <Link href={`/education/${article.id}`} className="text-[#00e5ff] text-[0.72rem] font-semibold mt-1 inline-block hover:opacity-75 transition-opacity">Read article →</Link>
                 <div className="flex justify-between text-[#666] text-[0.72rem] mt-3" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.8rem', color: '#666', fontSize: '0.72rem' }}>
                   <span>{article.read_time}</span>
-                  <span>{article.date}</span>
+                  <span>{new Date(article.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                 </div>
               </div>
             </div>
           ))}
         </div>
+        )}
 
         {/* FAQ */}
         <h3 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '1rem', marginBottom: '1.2rem' }}>Frequently Asked Questions</h3>

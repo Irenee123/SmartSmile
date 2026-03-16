@@ -46,6 +46,7 @@ export default function SettingsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'data' | 'account' | ''>('');
   const [deleting, setDeleting] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   
   // Toast
   const [showToast, setShowToast] = useState(false);
@@ -272,10 +273,27 @@ export default function SettingsPage() {
         .delete()
         .eq('user_id', user.id);
       
-      // Sign out first
+      // Call the delete API to remove user from Supabase Auth
+      const response = await fetch('/api/auth/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok || data.error) {
+        console.error('Failed to delete account:', data.error);
+        showToastMessage('Failed to delete account');
+        setDeleting(false);
+        setIsModalOpen(false);
+        return;
+      }
+      
+      // Sign out after successful deletion
       await signOut();
       
-      showToastMessage('Account deletion initiated');
+      showToastMessage('Account deleted successfully');
       
       // Redirect to login after a short delay
       setTimeout(() => {
@@ -312,9 +330,17 @@ export default function SettingsPage() {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
     await signOut();
     router.push('/login');
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false);
   };
 
   const formatDate = (dateString: string) => {
@@ -361,6 +387,9 @@ export default function SettingsPage() {
         <Link href="/education" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
           <span>📚</span> Education Hub
         </Link>
+        <Link href="/dentist" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
+          <span>🦷</span> Find a Dentist
+        </Link>
         
         <div className="py-3 px-4 text-[0.68rem] tracking-[0.12em] uppercase text-[#666] mt-2">Account</div>
         <Link href="/settings" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors bg-[rgba(0,229,255,0.08)] text-[#00e5ff] border-l-2 border-[#00e5ff]">
@@ -369,6 +398,35 @@ export default function SettingsPage() {
         <button onClick={handleLogout} className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors w-full text-left">
           <span>🚪</span> Log Out
         </button>
+        
+        {/* Logout Confirmation Modal */}
+        {showLogoutModal && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-8">
+            <div className="bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] rounded-[16px] p-8 max-w-md w-full">
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[rgba(255,200,50,0.1)] flex items-center justify-center text-3xl">
+                  🚪
+                </div>
+                <h3 className="font-['Syne'] font-bold text-xl text-white mb-2">Log Out</h3>
+                <p className="text-[#888] text-[0.92rem] mb-6">Are you sure you want to log out?</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={cancelLogout}
+                    className="flex-1 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-white rounded-[10px] px-5 py-3 font-['Syne'] font-semibold text-[0.9rem] cursor-pointer hover:bg-[rgba(255,255,255,0.1)] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmLogout}
+                    className="flex-1 bg-[#f87171] text-white rounded-[10px] px-5 py-3 font-['Syne'] font-semibold text-[0.9rem] cursor-pointer hover:bg-[#ef4444] transition-colors"
+                  >
+                    Log Out
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         
         <div className="mt-auto py-4 px-4 border-t border-[rgba(255,255,255,0.07)]">
           <div className="flex items-center gap-3">

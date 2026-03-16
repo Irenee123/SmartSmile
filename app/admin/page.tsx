@@ -45,6 +45,7 @@ export default function AdminDashboardPage() {
   const [recentScreenings, setRecentScreenings] = useState<Screening[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -109,7 +110,10 @@ export default function AdminDashboardPage() {
       const totalUsers = profilesData?.length || uniqueUserIds.size;
       const avgConfidence = totalScreenings > 0 && screeningsData
         ? Math.round(
-            screeningsData.reduce((acc, s) => acc + (s.confidence_score || 0), 0) / totalScreenings * 100
+            screeningsData.reduce((acc, s) => {
+              const score = s.confidence_score || 0;
+              return acc + (score > 1 ? score : score * 100);
+            }, 0) / totalScreenings
           )
         : 0;
 
@@ -142,9 +146,17 @@ export default function AdminDashboardPage() {
     setLoadingData(false);
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
     await signOut();
     router.push('/login');
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false);
   };
 
   const getRiskColor = (level: string) => {
@@ -223,6 +235,12 @@ export default function AdminDashboardPage() {
         <Link href="/admin/dentists" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
           <span>🦷</span> Dentists
         </Link>
+        <Link href="/admin/education" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
+          <span>📚</span> Education
+        </Link>
+        <Link href="/admin/announcements" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
+          <span>📣</span> Announcements
+        </Link>
 
         <div className="py-3 px-4 text-[0.68rem] tracking-[0.12em] uppercase text-[#666] mt-2">System</div>
         <Link href="/admin/model" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
@@ -236,6 +254,35 @@ export default function AdminDashboardPage() {
         <button onClick={handleLogout} className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors w-full text-left">
           <span>🚪</span> Log Out
         </button>
+
+        {/* Logout Confirmation Modal */}
+        {showLogoutModal && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-8">
+            <div className="bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] rounded-[16px] p-8 max-w-md w-full">
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[rgba(255,200,50,0.1)] flex items-center justify-center text-3xl">
+                  🚪
+                </div>
+                <h3 className="font-['Syne'] font-bold text-xl text-white mb-2">Log Out</h3>
+                <p className="text-[#888] text-[0.92rem] mb-6">Are you sure you want to log out?</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={cancelLogout}
+                    className="flex-1 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-white rounded-[10px] px-5 py-3 font-['Syne'] font-semibold text-[0.9rem] cursor-pointer hover:bg-[rgba(255,255,255,0.1)] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmLogout}
+                    className="flex-1 bg-[#f87171] text-white rounded-[10px] px-5 py-3 font-['Syne'] font-semibold text-[0.9rem] cursor-pointer hover:bg-[#ef4444] transition-colors"
+                  >
+                    Log Out
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="mt-auto py-4 px-4 border-t border-[rgba(255,255,255,0.07)]">
           <div className="flex items-center gap-3">
@@ -407,9 +454,9 @@ export default function AdminDashboardPage() {
                     </span>
                   </div>
                   <div>
-                    <div className="text-[0.82rem]">{Math.round(screening.confidence_score * 100)}%</div>
+                    <div className="text-[0.82rem]">{screening.confidence_score > 1 ? Math.round(screening.confidence_score) : Math.round(screening.confidence_score * 100)}%</div>
                     <div className="h-0.5 bg-[rgba(255,255,255,0.06)] rounded mt-1 overflow-hidden">
-                      <div className="h-full rounded bg-gradient-to-r from-[#a855f7] to-[#00e5ff]" style={{ width: `${screening.confidence_score * 100}%` }}></div>
+                      <div className="h-full rounded bg-gradient-to-r from-[#a855f7] to-[#00e5ff]" style={{ width: `${screening.confidence_score > 1 ? screening.confidence_score : screening.confidence_score * 100}%` }}></div>
                     </div>
                   </div>
                   <button className="bg-[rgba(168,85,247,0.08)] border border-[rgba(168,85,247,0.18)] text-[#a855f7] rounded-md py-1 px-2 text-[0.72rem] font-semibold cursor-pointer hover:bg-[rgba(168,85,247,0.16)] transition-colors">

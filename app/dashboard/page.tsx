@@ -27,6 +27,8 @@ export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [screenings, setScreenings] = useState<Screening[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [announcement, setAnnouncement] = useState<{ id: string; message: string; type: string } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -49,8 +51,30 @@ export default function DashboardPage() {
   useEffect(() => {
     if (user) {
       fetchScreenings();
+      fetchAnnouncement();
     }
   }, [user]);
+
+  const fetchAnnouncement = async () => {
+    const { data } = await supabase
+      .from('announcements')
+      .select('*')
+      .eq('active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+    if (data) {
+      const dismissed = localStorage.getItem(`announcement_dismissed_${data.id}`);
+      if (!dismissed) setAnnouncement(data);
+    }
+  };
+
+  const dismissAnnouncement = () => {
+    if (announcement) {
+      localStorage.setItem(`announcement_dismissed_${announcement.id}`, 'true');
+      setAnnouncement(null);
+    }
+  };
 
   // Refresh data when user comes back to dashboard
   useEffect(() => {
@@ -80,8 +104,16 @@ export default function DashboardPage() {
   };
 
   const handleLogout = async () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
     await signOut();
     router.push('/login');
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false);
   };
 
   // Calculate stats
@@ -171,10 +203,56 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+        {/* Logout Confirmation Modal */}
+        {showLogoutModal && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-8">
+            <div className="bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] rounded-[16px] p-8 max-w-md w-full">
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[rgba(255,200,50,0.1)] flex items-center justify-center text-3xl">
+                  🚪
+                </div>
+                <h3 className="font-['Syne'] font-bold text-xl text-white mb-2">Log Out</h3>
+                <p className="text-[#888] text-[0.92rem] mb-6">Are you sure you want to log out?</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={cancelLogout}
+                    className="flex-1 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-white rounded-[10px] px-5 py-3 font-['Syne'] font-semibold text-[0.9rem] cursor-pointer hover:bg-[rgba(255,255,255,0.1)] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmLogout}
+                    className="flex-1 bg-[#f87171] text-white rounded-[10px] px-5 py-3 font-['Syne'] font-semibold text-[0.9rem] cursor-pointer hover:bg-[#ef4444] transition-colors"
+                  >
+                    Log Out
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </aside>
 
       {/* Main Content */}
       <main className="ml-[240px] flex-1 p-8 pl-10 max-w-[calc(100vw-240px)]">
+        {/* Announcement Banner */}
+        {announcement && (() => {
+          const colors: Record<string, { bg: string; border: string; text: string; icon: string }> = {
+            info:    { bg: 'rgba(0,229,255,0.06)',    border: 'rgba(0,229,255,0.2)',    text: '#00e5ff', icon: '📢' },
+            warning: { bg: 'rgba(251,191,36,0.06)',   border: 'rgba(251,191,36,0.2)',   text: '#fbbf24', icon: '⚠️' },
+            success: { bg: 'rgba(52,211,153,0.06)',   border: 'rgba(52,211,153,0.2)',   text: '#34d399', icon: '✅' },
+            urgent:  { bg: 'rgba(248,113,113,0.06)',  border: 'rgba(248,113,113,0.2)',  text: '#f87171', icon: '🚨' },
+          };
+          const c = colors[announcement.type] || colors.info;
+          return (
+            <div className="flex items-center gap-3 rounded-[12px] px-4 py-3 mb-6 text-[0.85rem]" style={{ background: c.bg, border: `1px solid ${c.border}` }}>
+              <span className="text-lg flex-shrink-0">{c.icon}</span>
+              <span className="flex-1" style={{ color: c.text }}>{announcement.message}</span>
+              <button onClick={dismissAnnouncement} className="text-[#666] hover:text-[#f0f0f0] transition-colors text-lg flex-shrink-0 leading-none">✕</button>
+            </div>
+          );
+        })()}
+
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>

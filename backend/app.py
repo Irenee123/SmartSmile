@@ -97,32 +97,22 @@ def get_admin_user(user_id: str = Depends(get_current_user)):
     return user_id
 
 
-@app.on_event("startup")
-async def startup_event():
-    """
-    Load the model when the server starts
-    """
+def get_predictor():
     global predictor
-    try:
-        logger.info("Starting up server...")
-        logger.info("Loading model...")
-        
-        # Load model
+    if predictor is None:
+        logger.info("Loading model on first request...")
         model_loader = get_model_loader()
         model = model_loader.get_model()
         device = model_loader.get_device()
         class_labels = model_loader.get_class_labels()
-        
-        # Initialize predictor
         predictor = OralDiseasePredictor(model, device, class_labels)
-        
         logger.info(f"Model loaded successfully on {device}")
-        logger.info(f"Classes: {class_labels}")
-        logger.info("Server ready to accept requests")
-        
-    except Exception as e:
-        logger.error(f"Failed to load model: {str(e)}")
-        raise
+    return predictor
+
+
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Server starting up — model will load on first request")
 
 
 @app.get("/")
@@ -145,28 +135,17 @@ async def health_check():
     Health check endpoint
     """
     global predictor
-    
     if predictor is None:
-        return JSONResponse(content={
-            "status": "unhealthy",
-            "model_loaded": False,
-            "device": "unknown",
-            "classes": []
-        })
-    
-    return JSONResponse(content={
-        "status": "healthy",
-        "model_loaded": True,
-        "device": str(predictor.device),
-        "classes": predictor.class_labels
-    })
+        return JSONResponse(content={"status": "healthy", "model_loaded": False, "device": "unknown", "classes": []})
+    return JSONResponse(content={"status": "healthy", "model_loaded": True, "device": str(predictor.device), "classes": predictor.class_labels})
 
 
 # Debug endpoint to check heatmap availability
 @app.get("/debug/heatmap-status")
 async def heatmap_status():
     """Debug endpoint to check if heatmap code is available"""
-    has_method = hasattr(predictor, 'generate_heatmap') if predictor else False
+    p = predictor
+    has_method = hasattr(p, 'generate_heatmap') if p else False
     return {
         "predictor_exists": predictor is not None,
         "has_generate_heatmap": has_method,
@@ -180,33 +159,21 @@ async def predict(request: PredictionRequest, user_id: str = Depends(get_current
     Predict oral disease from base64 encoded image
     Requires authentication via JWT token
     """
-    global predictor
-    
     try:
-        # Check if predictor is initialized
-        if predictor is None:
-            raise HTTPException(
-                status_code=503,
-                detail="Model not loaded. Please try again later."
-            )
-        
-        # Validate image data
         if not request.image:
-            raise HTTPException(
-                status_code=400,
-                detail="No image data provided"
-            )
-        
+            raise HTTPException(status_code=400, detail="No image data provided")
+
         logger.info("Received prediction request")
-        
+        p = get_predictor()
+
         # Perform prediction
-        result = predictor.predict_from_base64(request.image)
-        
+        result = p.predict_from_base64(request.image)
+
         # Generate heatmap (optional, in background)
         heatmap_result = None
         try:
             logger.info("=== Generating heatmap... ===")
-            heatmap_result = predictor.generate_heatmap(request.image)
+            heatmap_result = p.generate_heatmap(request.image)
             if heatmap_result.get('success'):
                 logger.info("=== Heatmap generated successfully ===")
             else:

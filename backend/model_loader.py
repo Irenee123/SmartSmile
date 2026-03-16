@@ -16,7 +16,7 @@ class ModelLoader:
             model_path: Path to the trained model file
         """
         self.model_path = Path(model_path)
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cpu")
         self.model = None
         self.class_labels = CLASS_LABELS
         
@@ -34,7 +34,7 @@ class ModelLoader:
             print(f"Loading model from {self.model_path}...")
             
             # Load the model state dict
-            checkpoint = torch.load(self.model_path, map_location=self.device)
+            checkpoint = torch.load(self.model_path, map_location=torch.device('cpu'))
             
             # Try to load the model architecture from checkpoint first
             # The checkpoint should contain the full model or state dict
@@ -144,5 +144,4 @@ def get_model_loader():
     global _model_loader
     if _model_loader is None:
         _model_loader = ModelLoader()
-        _model_loader.load_model()
     return _model_loader

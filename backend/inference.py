@@ -1,4 +1,5 @@
 import torch
+torch.set_num_threads(1)
 import torch.nn.functional as F
 from torchvision import transforms
 from PIL import Image
@@ -362,6 +363,7 @@ class OralDiseasePredictor:
         try:
             # Decode and preprocess image
             image = self.preprocessor.decode_base64_image(base64_image)
+            
             tensor = self.preprocessor.preprocess(image)
             
             # Move to device
