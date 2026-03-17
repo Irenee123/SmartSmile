@@ -5,6 +5,7 @@ import { useAuth } from '@/components/auth-provider';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import Sidebar from '@/components/sidebar';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -226,52 +227,8 @@ const saveScreeningResult = async (analysis: AnalysisResult) => {
 
   return (
     <div className="min-h-screen bg-[#080808] flex">
-      {/* Sidebar */}
-      <aside className="w-[240px] min-w-[240px] bg-[#0e0e0e] border-r border-[rgba(255,255,255,0.07)] flex flex-col fixed left-0 top-0 h-screen z-50">
-        <div className="py-6 px-4 border-b border-[rgba(255,255,255,0.07)] font-['Syne'] font-extrabold text-[1.2rem] bg-gradient-to-r from-[#00e5ff] to-[#a855f7] bg-clip-text text-transparent">
-          SmartSmile
-        </div>
-        
-        <div className="py-3 px-4 text-[0.68rem] tracking-[0.12em] uppercase text-[#666]">Main</div>
-        <Link href="/dashboard" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>🏠</span> Dashboard
-        </Link>
-        <Link href="/screening" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors bg-[rgba(0,229,255,0.08)] text-[#00e5ff] border-l-2 border-[#00e5ff]">
-          <span>📷</span> New Screening
-        </Link>
-        <Link href="/history" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>📊</span> History
-        </Link>
-        <Link href="/education" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>📚</span> Education Hub
-        </Link>
-        <Link href="/dentist" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>🦷</span> Find a Dentist
-        </Link>
-        
-        <div className="py-3 px-4 text-[0.68rem] tracking-[0.12em] uppercase text-[#666] mt-2">Account</div>
-        <Link href="/settings" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>⚙️</span> Settings
-        </Link>
-        <button onClick={() => { supabase.auth.signOut(); router.push('/login'); }} className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors w-full text-left">
-          <span>🚪</span> Log Out
-        </button>
-        
-        <div className="mt-auto py-4 px-4 border-t border-[rgba(255,255,255,0.07)]">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-r from-[#00e5ff] to-[#a855f7] flex items-center justify-center font-bold text-[0.85rem] text-black">
-              {userInitial}
-            </div>
-            <div>
-              <div className="text-[0.85rem] font-semibold">{userName}</div>
-              <div className="text-[0.72rem] text-[#666]">{user.email}</div>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="ml-[240px] flex-1 p-10 max-w-[calc(100vw-240px)]">
+      <Sidebar />
+      <main className="md:ml-[240px] flex-1 p-4 md:p-10 pt-20 md:pt-10 max-w-full md:max-w-[calc(100vw-240px)]">
         <h1 className="font-['Syne'] font-extrabold text-[1.5rem] mb-2">New Screening</h1>
         <p className="text-[#666] text-[0.9rem] mb-8">Upload a clear photo of your teeth to receive your AI-powered oral health risk assessment.</p>
 

@@ -5,6 +5,7 @@ import { useAuth } from '@/components/auth-provider';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import Sidebar from '@/components/sidebar';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -108,81 +109,8 @@ export default function EducationPage() {
 
   return (
     <div className="min-h-screen bg-[#080808] flex" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-      {/* Sidebar */}
-      <aside className="w-[240px] min-w-[240px] bg-[#0e0e0e] border-r border-[rgba(255,255,255,0.07)] flex flex-col fixed left-0 top-0 h-screen z-50">
-        <div className="py-6 px-4 border-b border-[rgba(255,255,255,0.07)]" style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '1.2rem', background: 'linear-gradient(135deg, #00e5ff, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          SmartSmile
-        </div>
-        
-        <div className="py-3 px-4 text-[0.68rem] tracking-[0.12em] uppercase text-[#666]">Main</div>
-        <Link href="/dashboard" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>🏠</span> Dashboard
-        </Link>
-        <Link href="/screening" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>📷</span> New Screening
-        </Link>
-        <Link href="/history" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>📊</span> History
-        </Link>
-        <Link href="/education" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors bg-[rgba(0,229,255,0.08)] text-[#00e5ff] border-l-2 border-[#00e5ff]">
-          <span>📚</span> Education Hub
-        </Link>
-        <Link href="/dentist" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>🦷</span> Find a Dentist
-        </Link>
-        
-        <div className="py-3 px-4 text-[0.68rem] tracking-[0.12em] uppercase text-[#666] mt-2">Account</div>
-        <Link href="/settings" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>⚙️</span> Settings
-        </Link>
-        <button onClick={handleLogout} className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors w-full text-left">
-          <span>🚪</span> Log Out
-        </button>
-        
-        {/* Logout Confirmation Modal */}
-        {showLogoutModal && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-8">
-            <div className="bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] rounded-[16px] p-8 max-w-md w-full">
-              <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[rgba(255,200,50,0.1)] flex items-center justify-center text-3xl">
-                  🚪
-                </div>
-                <h3 className="font-['Syne'] font-bold text-xl text-white mb-2">Log Out</h3>
-                <p className="text-[#888] text-[0.92rem] mb-6">Are you sure you want to log out?</p>
-                <div className="flex gap-3">
-                  <button
-                    onClick={cancelLogout}
-                    className="flex-1 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-white rounded-[10px] px-5 py-3 font-['Syne'] font-semibold text-[0.9rem] cursor-pointer hover:bg-[rgba(255,255,255,0.1)] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={confirmLogout}
-                    className="flex-1 bg-[#f87171] text-white rounded-[10px] px-5 py-3 font-['Syne'] font-semibold text-[0.9rem] cursor-pointer hover:bg-[#ef4444] transition-colors"
-                  >
-                    Log Out
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        <div className="mt-auto py-4 px-4 border-t border-[rgba(255,255,255,0.07)]">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-r from-[#00e5ff] to-[#a855f7] flex items-center justify-center font-bold text-[0.85rem] text-black">
-              {userInitial}
-            </div>
-            <div>
-              <div className="text-[0.85rem] font-semibold">{userName}</div>
-              <div className="text-[0.72rem] text-[#666]">{user.email}</div>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="ml-[240px] flex-1 p-10 max-w-[calc(100vw-240px)]">
+      <Sidebar />
+      <main className="md:ml-[240px] flex-1 p-4 md:p-10 pt-20 md:pt-10 max-w-full md:max-w-[calc(100vw-240px)]">
         <h1 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '1.5rem', marginBottom: '0.3rem' }}>Education Hub</h1>
         <p className="text-[#666] text-[0.9rem] mb-8" style={{ lineHeight: 1.6 }}>Learn about oral health, proper hygiene techniques, and how AI-powered screening works.</p>
 

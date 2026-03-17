@@ -5,6 +5,7 @@ import { useAuth } from '@/components/auth-provider';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import Sidebar from '@/components/sidebar';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -119,57 +120,10 @@ export default function HistoryPage() {
     return null;
   }
 
-  const userInitial = user.email ? user.email[0].toUpperCase() : 'U';
-  const userName = user.email ? user.email.split('@')[0] : 'User';
-
   return (
     <div className="min-h-screen bg-[#080808] flex">
-      {/* Sidebar */}
-      <aside className="w-[240px] min-w-[240px] bg-[#0e0e0e] border-r border-[rgba(255,255,255,0.07)] flex flex-col fixed left-0 top-0 h-screen z-50">
-        <div className="py-6 px-4 border-b border-[rgba(255,255,255,0.07)] font-['Syne'] font-extrabold text-[1.2rem] bg-gradient-to-r from-[#00e5ff] to-[#a855f7] bg-clip-text text-transparent">
-          SmartSmile
-        </div>
-        
-        <div className="py-3 px-4 text-[0.68rem] tracking-[0.12em] uppercase text-[#666]">Main</div>
-        <Link href="/dashboard" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>🏠</span> Dashboard
-        </Link>
-        <Link href="/screening" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>📷</span> New Screening
-        </Link>
-        <Link href="/history" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors bg-[rgba(0,229,255,0.08)] text-[#00e5ff] border-l-2 border-[#00e5ff]">
-          <span>📊</span> History
-        </Link>
-        <Link href="/education" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>📚</span> Education Hub
-        </Link>
-        <Link href="/dentist" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>🦷</span> Find a Dentist
-        </Link>
-        
-        <div className="py-3 px-4 text-[0.68rem] tracking-[0.12em] uppercase text-[#666] mt-2">Account</div>
-        <Link href="/settings" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>⚙️</span> Settings
-        </Link>
-        <button onClick={() => { supabase.auth.signOut(); router.push('/login'); }} className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors w-full text-left">
-          <span>🚪</span> Log Out
-        </button>
-        
-        <div className="mt-auto py-4 px-4 border-t border-[rgba(255,255,255,0.07)]">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-r from-[#00e5ff] to-[#a855f7] flex items-center justify-center font-bold text-[0.85rem] text-black">
-              {userInitial}
-            </div>
-            <div>
-              <div className="text-[0.85rem] font-semibold">{userName}</div>
-              <div className="text-[0.72rem] text-[#666]">{user.email}</div>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="ml-[240px] flex-1 p-10 max-w-[calc(100vw-240px)]">
+      <Sidebar />
+      <main className="md:ml-[240px] flex-1 p-4 md:p-10 pt-20 md:pt-10 max-w-full md:max-w-[calc(100vw-240px)]">
         {/* Header */}
         <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
           <div>
@@ -182,7 +136,7 @@ export default function HistoryPage() {
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           <div className="bg-[#111] border border-[rgba(255,255,255,0.07)] rounded-[14px] p-5 text-center">
             <div className="font-['Syne'] font-extrabold text-[1.6rem] mb-1">{totalScreenings}</div>
             <div className="text-[0.72rem] text-[#666] uppercase tracking-wide">Total Screenings</div>
