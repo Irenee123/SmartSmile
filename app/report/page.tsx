@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 
@@ -20,7 +20,7 @@ interface Screening {
   image_url?: string;
 }
 
-export default function ReportPage() {
+function ReportContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const userId = searchParams.get('userId');
@@ -303,5 +303,13 @@ export default function ReportPage() {
         <p>For questions or concerns, please contact your dental healthcare provider</p>
       </div>
     </div>
+  );
+}
+
+export default function ReportPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', fontFamily: 'Arial, sans-serif' }}>Loading report...</div>}>
+      <ReportContent />
+    </Suspense>
   );
 }
