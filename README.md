@@ -1,6 +1,6 @@
 # 🦷 SmartSmile - Oral Health Analysis System
 
-An AI-powered dental image analysis application that uses a trained EfficientViT-B0 deep learning model to 6 detect common oral health conditions from dental photographs.
+An AI powered dental image analysis application that uses a trained EfficientViT-B0 deep learning model to 6 detect common oral health conditions from dental photographs.
 
 ## 🎯 Features
 
