@@ -2,11 +2,11 @@ fastapi
 uvicorn
 python-multipart
 pillow
-torch
+torch==2.10.0
+torchvision==0.25.0
 numpy
-python-jose[cryptography]
 opencv-python
 scipy
 python-dotenv
-torch==2.10.0
-torchvision==0.25.0
+python-jose[cryptography]
+timm

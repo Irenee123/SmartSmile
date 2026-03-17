@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: smartsmile-frontend
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://duel123-smartsmile.hf.space
