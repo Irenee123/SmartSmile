@@ -2,6 +2,12 @@
 
 An AI powered dental image analysis application that uses a trained EfficientViT-B0 deep learning model to 6 detect common oral health conditions from dental photographs.
 
+## 🎥 Deployment Link
+
+Watch the SmartSmile system deployed:
+
+**[[SmartSmile](https://smartsmileplatform.onrender.com/)]**
+
 ## 🎯 Features
 
 ### Core Features
