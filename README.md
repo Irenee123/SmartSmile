@@ -184,7 +184,7 @@ App runs at: http://localhost:3000
 
 Watch the SmartSmile system in action:
 
-**[Video Demo Link]**
+**[[Video Demo Link](https://drive.google.com/file/d/1IbHV3qQ1x1yYdQBsSg9SsY98SS_bNnH2/view?usp=sharing)]**
 
 
 ## 🔧 How It Works
