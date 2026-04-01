@@ -22,6 +22,8 @@ interface Screening {
   summary: string;
 }
 
+import Spinner from '@/components/spinner'
+
 export default function DashboardPage() {
   const { user, loading: authLoading, signOut } = useAuth();
   const router = useRouter();
@@ -132,11 +134,7 @@ export default function DashboardPage() {
   };
 
   if (!mounted || authLoading || loadingData) {
-    return (
-      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
-        <div className="text-[#00e5ff]">Loading...</div>
-      </div>
-    );
+    return <Spinner />;
   }
 
   if (!user) {
@@ -146,22 +144,40 @@ export default function DashboardPage() {
   const userInitial = user.email ? user.email[0].toUpperCase() : 'U';
   const userName = user.email ? user.email.split('@')[0] : 'User';
 
+  const conditionCounts: Record<string, number> = {};
+  screenings.forEach(s => {
+    const raw = s.indicators;
+    const list: string[] = Array.isArray(raw) ? raw : typeof raw === 'string' ? raw.split(',').map((x: string) => x.trim()).filter(Boolean) : [];
+    list.forEach(ind => {
+      const key = ind.split('(')[0].trim();
+      if (key) conditionCounts[key] = (conditionCounts[key] || 0) + 1;
+    });
+  });
+  const conditionEntries = Object.entries(conditionCounts).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const conditionMax = conditionEntries[0]?.[1] || 1;
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
+
   return (
     <div className="min-h-screen bg-[#080808] flex">
       <Sidebar />
       <main className="md:ml-[240px] flex-1 p-4 md:p-8 md:pl-10 pt-20 md:pt-8 max-w-full md:max-w-[calc(100vw-240px)]">
         {/* Announcement Banner */}
         {announcement && (() => {
-          const colors: Record<string, { bg: string; border: string; text: string; icon: string }> = {
-            info:    { bg: 'rgba(0,229,255,0.06)',    border: 'rgba(0,229,255,0.2)',    text: '#00e5ff', icon: '📢' },
-            warning: { bg: 'rgba(251,191,36,0.06)',   border: 'rgba(251,191,36,0.2)',   text: '#fbbf24', icon: '⚠️' },
-            success: { bg: 'rgba(52,211,153,0.06)',   border: 'rgba(52,211,153,0.2)',   text: '#34d399', icon: '✅' },
-            urgent:  { bg: 'rgba(248,113,113,0.06)',  border: 'rgba(248,113,113,0.2)',  text: '#f87171', icon: '🚨' },
+          const colors: Record<string, { bg: string; border: string; text: string }> = {
+            info:    { bg: 'rgba(0,229,255,0.06)',    border: 'rgba(0,229,255,0.2)',    text: '#00e5ff' },
+            warning: { bg: 'rgba(251,191,36,0.06)',   border: 'rgba(251,191,36,0.2)',   text: '#fbbf24' },
+            success: { bg: 'rgba(52,211,153,0.06)',   border: 'rgba(52,211,153,0.2)',   text: '#34d399' },
+            urgent:  { bg: 'rgba(248,113,113,0.06)',  border: 'rgba(248,113,113,0.2)',  text: '#f87171' },
           };
           const c = colors[announcement.type] || colors.info;
           return (
             <div className="flex items-center gap-3 rounded-[12px] px-4 py-3 mb-6 text-[0.85rem]" style={{ background: c.bg, border: `1px solid ${c.border}` }}>
-              <span className="text-lg flex-shrink-0">{c.icon}</span>
               <span className="flex-1" style={{ color: c.text }}>{announcement.message}</span>
               <button onClick={dismissAnnouncement} className="text-[#666] hover:text-[#f0f0f0] transition-colors text-lg flex-shrink-0 leading-none">✕</button>
             </div>
@@ -171,11 +187,11 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="flex flex-wrap justify-between items-center mb-8 gap-4">
           <div>
-            <h1 className="font-['Syne'] font-extrabold text-[1.5rem]">Good morning 👋</h1>
+            <h1 className="font-['Syne'] font-extrabold text-[1.5rem]">{getGreeting()}</h1>
             <p className="text-[#666] text-[0.88rem] mt-1">Here's your oral health overview for today.</p>
           </div>
           <Link href="/screening" className="bg-[#00e5ff] text-black px-5 py-2.5 rounded-lg font-['Syne'] font-bold text-[0.85rem] no-underline hover:opacity-90 transition-opacity inline-flex items-center gap-2">
-            📷 Start New Screening
+            Start New Screening
           </Link>
         </div>
 
@@ -213,11 +229,7 @@ export default function DashboardPage() {
             <div className="font-['Syne'] font-bold text-[0.95rem] mb-5 flex justify-between items-center">
               Latest Result
               {latestScreening ? (
-                <span className="px-3 py-1 rounded-full text-[0.78rem] font-bold" style={{ 
-                  backgroundColor: `${getRiskLevelColor(latestScreening.risk_level)}20`,
-                  color: getRiskLevelColor(latestScreening.risk_level),
-                  border: `1px solid ${getRiskLevelColor(latestScreening.risk_level)}40`
-                }}>
+                <span className="px-3 py-1 rounded-full text-[0.78rem] font-bold" style={{ backgroundColor: `${getRiskLevelColor(latestScreening.risk_level)}20`, color: getRiskLevelColor(latestScreening.risk_level), border: `1px solid ${getRiskLevelColor(latestScreening.risk_level)}40` }}>
                   {getRiskLevelDisplay(latestScreening.risk_level)}
                 </span>
               ) : (
@@ -253,45 +265,26 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Risk Trend */}
+          {/* Condition Frequency */}
           <div className="bg-[#111] border border-[rgba(255,255,255,0.07)] rounded-[14px] p-6">
-            <div className="font-['Syne'] font-bold text-[0.95rem] mb-4">Risk Trend</div>
-            {screenings.length > 0 ? (
-              <div className="h-[120px] flex items-center justify-center">
-                <svg width="100%" height="120" viewBox="0 0 300 120" preserveAspectRatio="none">
-                  {screenings.length > 1 && (() => {
-                    const points = screenings.slice(0, 6).reverse().map((s, i) => {
-                      const x = 30 + (i * (240 / (Math.min(6, screenings.length) - 1)));
-                      let y = 90;
-                      if (s.risk_level === 'high') y = 20;
-                      else if (s.risk_level === 'moderate') y = 50;
-                      else y = 90;
-                      return `${x},${y}`;
-                    }).join(' ');
-                    return (
-                      <>
-                        <polyline 
-                          points={points} 
-                          stroke="#00e5ff" 
-                          strokeWidth="2" 
-                          fill="none" 
-                        />
-                        {screenings.slice(0, 6).reverse().map((s, i) => {
-                          const x = 30 + (i * (240 / (Math.min(6, screenings.length) - 1)));
-                          let y = 90;
-                          let color = '#34d399';
-                          if (s.risk_level === 'high') { y = 20; color = '#f87171'; }
-                          else if (s.risk_level === 'moderate') { y = 50; color = '#fbbf24'; }
-                          return <circle key={i} cx={x} cy={y} r="4" fill={color} />;
-                        })}
-                      </>
-                    );
-                  })()}
-                </svg>
+            <div className="font-['Syne'] font-bold text-[0.95rem] mb-1">Condition Frequency</div>
+            <p className="text-[#555] text-[0.72rem] mb-4">How often each condition was detected</p>
+            {conditionEntries.length > 0 ? (
+              <div className="flex items-end justify-around gap-1 h-[130px]">
+                {conditionEntries.map(([condition, count]) => (
+                  <div key={condition} className="flex flex-col items-center gap-1 flex-1 min-w-0 h-full justify-end">
+                    <span className="text-[#aaa] text-[0.65rem] font-semibold">{count}</span>
+                    <div
+                      className="w-full rounded-t-[3px] bg-[#00e5ff]"
+                      style={{ height: `${Math.max(6, (count / conditionMax) * 72)}px` }}
+                    />
+                    <span className="text-[#555] text-[0.55rem] text-center leading-tight w-full truncate" title={condition}>{condition}</span>
+                  </div>
+                ))}
               </div>
             ) : (
-              <div className="h-[120px] flex items-center justify-center text-[#666] text-[0.85rem]">
-                Complete screenings to see your trend
+              <div className="h-[140px] flex items-center justify-center text-[#666] text-[0.85rem]">
+                Complete screenings to see condition frequency
               </div>
             )}
           </div>
@@ -302,17 +295,14 @@ export default function DashboardPage() {
           <div className="font-['Syne'] font-bold text-[0.95rem] mb-5">Quick Tips</div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-[#161616] border border-[rgba(255,255,255,0.07)] rounded-[12px] p-5">
-              <div className="text-[1.4rem] mb-2">🪥</div>
               <h4 className="font-['Syne'] font-bold text-[0.85rem] mb-1">Brush Properly</h4>
               <p className="text-[#666] text-[0.78rem] leading-[1.55]">Brush for 2 minutes, twice a day using a soft-bristled toothbrush and fluoride toothpaste.</p>
             </div>
             <div className="bg-[#161616] border border-[rgba(255,255,255,0.07)] rounded-[12px] p-5">
-              <div className="text-[1.4rem] mb-2">🍬</div>
               <h4 className="font-['Syne'] font-bold text-[0.85rem] mb-1">Limit Sugar Intake</h4>
               <p className="text-[#666] text-[0.78rem] leading-[1.55]">Reduce sugary drinks and snacks. Bacteria feed on sugar to produce enamel-damaging acids.</p>
             </div>
             <div className="bg-[#161616] border border-[rgba(255,255,255,0.07)] rounded-[12px] p-5">
-              <div className="text-[1.4rem] mb-2">📅</div>
               <h4 className="font-['Syne'] font-bold text-[0.85rem] mb-1">Regular Check-ups</h4>
               <p className="text-[#666] text-[0.78rem] leading-[1.55]">Even with low risk results, visit a dentist every 6 months for professional cleaning and exams.</p>
             </div>

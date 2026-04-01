@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '@/components/auth-provider';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { LayoutDashboard, ScanLine, ClockArrowUp, BookOpen, MapPin, Settings, LogOut } from 'lucide-react';
 
 export default function Sidebar() {
   const { user, signOut } = useAuth();
@@ -15,7 +16,7 @@ export default function Sidebar() {
   const userInitial = user?.email ? user.email[0].toUpperCase() : 'U';
   const userName = user?.email ? user.email.split('@')[0] : 'User';
 
-  const navLink = (href: string, icon: string, label: string) => {
+  const navLink = (href: string, icon: React.ReactNode, label: string) => {
     const active = pathname === href;
     return (
       <Link
@@ -27,7 +28,7 @@ export default function Sidebar() {
             : 'text-[#666] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0]'
         }`}
       >
-        <span>{icon}</span> {label}
+        {icon} {label}
       </Link>
     );
   };
@@ -38,18 +39,18 @@ export default function Sidebar() {
         SmartSmile
       </div>
       <div className="py-3 px-4 text-[0.68rem] tracking-[0.12em] uppercase text-[#666]">Main</div>
-      {navLink('/dashboard', '🏠', 'Dashboard')}
-      {navLink('/screening', '📷', 'New Screening')}
-      {navLink('/history', '📊', 'History')}
-      {navLink('/education', '📚', 'Education Hub')}
-      {navLink('/dentist', '🦷', 'Find a Dentist')}
+      {navLink('/dashboard', <LayoutDashboard size={16} />, 'Dashboard')}
+      {navLink('/screening', <ScanLine size={16} />, 'New Screening')}
+      {navLink('/history', <ClockArrowUp size={16} />, 'History')}
+      {navLink('/education', <BookOpen size={16} />, 'Education Hub')}
+      {navLink('/dentist', <MapPin size={16} />, 'Find a Dentist')}
       <div className="py-3 px-4 text-[0.68rem] tracking-[0.12em] uppercase text-[#666] mt-2">Account</div>
-      {navLink('/settings', '⚙️', 'Settings')}
+      {navLink('/settings', <Settings size={16} />, 'Settings')}
       <button
         onClick={() => { setOpen(false); setShowLogoutModal(true); }}
         className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors w-full text-left"
       >
-        <span>🚪</span> Log Out
+        <LogOut size={16} /> Log Out
       </button>
       <div className="mt-auto py-4 px-4 border-t border-[rgba(255,255,255,0.07)]">
         <div className="flex items-center gap-3">
@@ -115,18 +116,18 @@ export default function Sidebar() {
         </div>
         <div className="flex flex-col flex-1 overflow-y-auto pt-2">
           <div className="py-3 px-4 text-[0.68rem] tracking-[0.12em] uppercase text-[#666]">Main</div>
-          {navLink('/dashboard', '🏠', 'Dashboard')}
-          {navLink('/screening', '📷', 'New Screening')}
-          {navLink('/history', '📊', 'History')}
-          {navLink('/education', '📚', 'Education Hub')}
-          {navLink('/dentist', '🦷', 'Find a Dentist')}
+          {navLink('/dashboard', <LayoutDashboard size={16} />, 'Dashboard')}
+          {navLink('/screening', <ScanLine size={16} />, 'New Screening')}
+          {navLink('/history', <ClockArrowUp size={16} />, 'History')}
+          {navLink('/education', <BookOpen size={16} />, 'Education Hub')}
+          {navLink('/dentist', <MapPin size={16} />, 'Find a Dentist')}
           <div className="py-3 px-4 text-[0.68rem] tracking-[0.12em] uppercase text-[#666] mt-2">Account</div>
-          {navLink('/settings', '⚙️', 'Settings')}
+          {navLink('/settings', <Settings size={16} />, 'Settings')}
           <button
             onClick={() => { setOpen(false); setShowLogoutModal(true); }}
             className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors w-full text-left"
           >
-            <span>🚪</span> Log Out
+            <LogOut size={16} /> Log Out
           </button>
         </div>
         <div className="py-4 px-4 border-t border-[rgba(255,255,255,0.07)]">
@@ -147,7 +148,7 @@ export default function Sidebar() {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-6">
           <div className="bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] rounded-[16px] p-8 max-w-md w-full">
             <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[rgba(255,200,50,0.1)] flex items-center justify-center text-3xl">🚪</div>
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[rgba(255,200,50,0.1)] flex items-center justify-center text-[#fbbf24]"><LogOut size={28} /></div>
               <h3 className="font-['Syne'] font-bold text-xl text-white mb-2">Log Out</h3>
               <p className="text-[#888] text-[0.92rem] mb-6">Are you sure you want to log out?</p>
               <div className="flex gap-3">

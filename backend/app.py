@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from jose import jwt, JWTError
 import uvicorn
 from model_loader import get_model_loader
-from inference import OralDiseasePredictor
+from inference import OralDiseasePredictor, DentalImageValidator
 import logging
 import os
 from dotenv import load_dotenv
@@ -45,8 +45,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global predictor instance
+# Global predictor and validator instances
 predictor = None
+dental_validator = DentalImageValidator()
 
 # Request model
 class PredictionRequest(BaseModel):
@@ -198,7 +199,28 @@ async def predict(request: PredictionRequest, user_id: str = Depends(get_current
             )
         
         logger.info("Received prediction request")
-        
+
+        # Validate image is a dental photo before running inference
+        try:
+            raw_image = predictor.preprocessor.decode_base64_image(request.image)
+            validation = dental_validator.validate(raw_image)
+            if not validation["valid"]:
+                logger.warning(f"Image rejected by dental validator: {validation['reason']}")
+                raise HTTPException(
+                    status_code=422,
+                    detail={
+                        "error": "invalid_image",
+                        "message": f"Analysis failed: This image does not appear to be a dental photograph. SmartSmile can only analyse clear photos of teeth and gums. Please upload a proper dental image and try again.",
+                        "tooth_ratio": validation["tooth_ratio"],
+                        "gum_ratio": validation["gum_ratio"]
+                    }
+                )
+            logger.info(f"Image validated — tooth: {validation['tooth_ratio']*100:.1f}%, gum: {validation['gum_ratio']*100:.1f}%")
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.warning(f"Validation check failed unexpectedly: {e} — proceeding with inference")
+
         # Perform prediction
         result = predictor.predict_from_base64(request.image)
         
@@ -365,7 +387,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "app:app",
         host="0.0.0.0",
-        port=7860,
-        reload=False,
+        port=8000,
+        reload=True,
         log_level="info"
     )

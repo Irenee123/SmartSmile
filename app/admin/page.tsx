@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useAuth } from '@/components/auth-provider';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { LayoutDashboard, Users, ScanLine, MapPin, BookOpen, Megaphone, Cpu, Settings, LogOut, Mail } from 'lucide-react';
+import Spinner from '@/components/spinner';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -46,6 +48,7 @@ export default function AdminDashboardPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [topUsers, setTopUsers] = useState<{ userId: string; email: string; count: number }[]>([]);
 
   useEffect(() => {
     setMounted(true);
@@ -99,7 +102,7 @@ export default function AdminDashboardPage() {
     // Fetch real users from profiles table
     const { data: profilesData } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, email')
       .order('created_at', { ascending: false });
 
     // Get unique users from screenings for stats
@@ -141,6 +144,21 @@ export default function AdminDashboardPage() {
       };
 
       setRecentScreenings(screeningsData?.slice(0, 5) || []);
+
+      // Build top users by screening count
+      const userCounts: Record<string, number> = {};
+      screeningsData?.forEach(s => { userCounts[s.user_id] = (userCounts[s.user_id] || 0) + 1; });
+      const profileMap: Record<string, string> = {};
+      profilesData?.forEach((p: any) => { if (p.email) profileMap[p.id] = p.email; });
+      const built = Object.entries(userCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([userId, count]) => {
+          const email = profileMap[userId] || '';
+          const masked = email ? `${email[0]}***@${email.split('@')[1]}` : `${userId.slice(0, 6)}...`;
+          return { userId, email: masked, count };
+        });
+      setTopUsers(built);
     }
 
     setLoadingData(false);
@@ -194,11 +212,7 @@ export default function AdminDashboardPage() {
   const highPct = Math.round((riskData.highRisk / riskData.total) * 100) || 20;
 
   if (!mounted || authLoading || loadingData) {
-    return (
-      <div className="min-h-screen bg-[#060608] flex items-center justify-center">
-        <div className="text-[#a855f7]">Loading admin dashboard...</div>
-      </div>
-    );
+    return <Spinner color="#a855f7" />;
   }
 
   if (!user) return null;
@@ -222,37 +236,40 @@ export default function AdminDashboardPage() {
 
         <div className="py-3 px-4 text-[0.68rem] tracking-[0.12em] uppercase text-[#666]">Overview</div>
         <Link href="/admin" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] bg-[rgba(168,85,247,0.1)] text-[#a855f7] border-l-2 border-[#a855f7] text-[0.88rem]">
-          <span>📊</span> Dashboard
+          <LayoutDashboard size={16} /> Dashboard
         </Link>
 
         <div className="py-3 px-4 text-[0.68rem] tracking-[0.12em] uppercase text-[#666] mt-2">Management</div>
         <Link href="/admin/users" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>👥</span> Users
+          <Users size={16} /> Users
         </Link>
         <Link href="/admin/screenings" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>📷</span> Screenings
+          <ScanLine size={16} /> Screenings
         </Link>
         <Link href="/admin/dentists" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>🦷</span> Dentists
+          <MapPin size={16} /> Dentists
         </Link>
         <Link href="/admin/education" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>📚</span> Education
+          <BookOpen size={16} /> Education
         </Link>
         <Link href="/admin/announcements" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>📣</span> Announcements
+          <Megaphone size={16} /> Announcements
+        </Link>
+        <Link href="/admin/messages" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
+          <Mail size={16} /> Messages
         </Link>
 
         <div className="py-3 px-4 text-[0.68rem] tracking-[0.12em] uppercase text-[#666] mt-2">System</div>
         <Link href="/admin/model" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>🤖</span> Model Monitor
+          <Cpu size={16} /> Model Monitor
         </Link>
         <Link href="/admin/settings" className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors">
-          <span>⚙️</span> Settings
+          <Settings size={16} /> Settings
         </Link>
 
         <div className="py-3 px-4 text-[0.68rem] tracking-[0.12em] uppercase text-[#666] mt-2">Session</div>
         <button onClick={handleLogout} className="flex items-center gap-3 py-2.5 px-4 mx-2 rounded-[10px] text-[#666] text-[0.88rem] hover:bg-[rgba(255,255,255,0.04)] hover:text-[#f0f0f0] transition-colors w-full text-left">
-          <span>🚪</span> Log Out
+          <LogOut size={16} /> Log Out
         </button>
 
         {/* Logout Confirmation Modal */}
@@ -260,8 +277,8 @@ export default function AdminDashboardPage() {
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-8">
             <div className="bg-[#0a0a0a] border border-[rgba(255,255,255,0.1)] rounded-[16px] p-8 max-w-md w-full">
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[rgba(255,200,50,0.1)] flex items-center justify-center text-3xl">
-                  🚪
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[rgba(255,200,50,0.1)] flex items-center justify-center text-[#fbbf24]">
+                  <LogOut size={28} />
                 </div>
                 <h3 className="font-['Syne'] font-bold text-xl text-white mb-2">Log Out</h3>
                 <p className="text-[#888] text-[0.92rem] mb-6">Are you sure you want to log out?</p>
@@ -398,28 +415,40 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* Daily Screenings Bar Chart */}
+          {/* Top Users by Screenings */}
           <div className="bg-[#101012] border border-[rgba(255,255,255,0.07)] rounded-[14px] p-6">
-            <h3 className="font-['Syne'] font-bold text-[0.95rem] mb-5">Daily Screenings — Last 14 Days</h3>
-            <div className="flex items-end gap-1 h-[90px]">
-              {[18, 25, 31, 22, 38, 44, 29, 35, 41, 52, 48, 39, 55, 60].map((val, i) => {
-                const maxVal = 60;
-                const height = (val / maxVal) * 100;
-                const isToday = i === 13;
-                return (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                    <div className="text-[0.62rem] text-[#666]">{val}</div>
-                    <div
-                      className="w-full rounded-t cursor-pointer hover:opacity-75 transition-opacity"
-                      style={{ height: `${height}%`, background: isToday ? '#a855f7' : 'rgba(168,85,247,0.4)' }}
-                    ></div>
-                    <div className="text-[0.62rem]" style={{ color: isToday ? '#a855f7' : '#666', fontWeight: isToday ? 700 : 400 }}>
-                      {['20','21','22','23','24','25','26','27','28','01','02','03','04','05'][i]}
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="font-['Syne'] font-bold text-[0.95rem]">Top Users by Screenings</h3>
+              <Link href="/admin/users" className="text-[0.75rem] text-[#a855f7] no-underline hover:underline font-medium">View all →</Link>
             </div>
+            {topUsers.length === 0 ? (
+              <div className="text-center py-8 text-[#666] text-[0.85rem]">No data yet</div>
+            ) : (() => {
+              const max = topUsers[0].count;
+              return (
+                <div className="flex flex-col gap-3">
+                  {topUsers.map((u, i) => (
+                    <div key={u.userId}>
+                      <div className="flex justify-between items-center mb-1">
+                        <div className="flex items-center gap-2">
+                          <div className="w-5 h-5 rounded-full bg-gradient-to-r from-[#a855f7] to-[#00e5ff] flex items-center justify-center text-[0.62rem] font-bold text-black flex-shrink-0">
+                            {i + 1}
+                          </div>
+                          <span className="text-[0.8rem] text-[#ccc] truncate max-w-[140px]">{u.email}</span>
+                        </div>
+                        <span className="font-['Syne'] font-bold text-[0.82rem] text-[#a855f7] flex-shrink-0 ml-2">{u.count}</span>
+                      </div>
+                      <div className="h-1 bg-[rgba(255,255,255,0.06)] rounded overflow-hidden">
+                        <div
+                          className="h-full rounded"
+                          style={{ width: `${(u.count / max) * 100}%`, background: i === 0 ? 'linear-gradient(90deg,#a855f7,#00e5ff)' : 'rgba(168,85,247,0.4)' }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </div>
 
@@ -508,13 +537,13 @@ export default function AdminDashboardPage() {
             <h3 className="font-['Syne'] font-bold text-[0.95rem] mb-4">Quick Actions</h3>
             <div className="flex flex-col gap-3">
               {[
-                { href: '/admin/users', icon: '👥', label: 'Manage Users', sub: 'View, deactivate or delete users', color: 'rgba(168,85,247,0.1)', border: 'rgba(168,85,247,0.15)' },
-                { href: '/admin/screenings', icon: '📷', label: 'View Screenings', sub: 'Browse and filter all records', color: 'rgba(0,229,255,0.08)', border: 'rgba(0,229,255,0.12)' },
-                { href: '/admin/model', icon: '🤖', label: 'Model Monitor', sub: 'Check performance metrics', color: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.12)' },
-                { href: '/admin/settings', icon: '⚙️', label: 'System Settings', sub: 'Retention, maintenance, access', color: 'rgba(249,115,22,0.08)', border: 'rgba(249,115,22,0.12)' },
+                { href: '/admin/users', icon: <Users size={15} />, label: 'Manage Users', sub: 'View, deactivate or delete users', color: 'rgba(168,85,247,0.1)', border: 'rgba(168,85,247,0.15)', iconColor: '#a855f7' },
+                { href: '/admin/screenings', icon: <ScanLine size={15} />, label: 'View Screenings', sub: 'Browse and filter all records', color: 'rgba(0,229,255,0.08)', border: 'rgba(0,229,255,0.12)', iconColor: '#00e5ff' },
+                { href: '/admin/model', icon: <Cpu size={15} />, label: 'Model Monitor', sub: 'Check performance metrics', color: 'rgba(52,211,153,0.08)', border: 'rgba(52,211,153,0.12)', iconColor: '#34d399' },
+                { href: '/admin/settings', icon: <Settings size={15} />, label: 'System Settings', sub: 'Retention, maintenance, access', color: 'rgba(249,115,22,0.08)', border: 'rgba(249,115,22,0.12)', iconColor: '#f97316' },
               ].map((action) => (
                 <Link key={action.href} href={action.href} className="flex items-center gap-3 bg-[#141416] border border-[rgba(255,255,255,0.07)] rounded-[10px] p-4 cursor-pointer hover:border-[rgba(168,85,247,0.2)] hover:bg-[rgba(168,85,247,0.05)] transition-all no-underline">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[0.9rem]" style={{ background: action.color, border: `1px solid ${action.border}` }}>{action.icon}</div>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: action.color, border: `1px solid ${action.border}`, color: action.iconColor }}>{action.icon}</div>
                   <div>
                     <div className="text-[0.85rem] font-semibold text-[#f0f0f0]">{action.label}</div>
                     <div className="text-[0.72rem] text-[#666]">{action.sub}</div>

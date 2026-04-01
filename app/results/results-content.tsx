@@ -22,8 +22,11 @@ interface ScreeningRecord {
   recommendations: string[] | null;
   model_version: string | null;
   image_path: string | null;
+  heatmap_url: string | null;
   is_deleted: boolean;
 }
+
+import Spinner from '@/components/spinner'
 
 export default function ResultsContent() {
   const { user, loading: authLoading } = useAuth();
@@ -317,8 +320,11 @@ export default function ResultsContent() {
     return {};
   };
 
-  const getHeatmapImage = (): string | null => {
-    if (sessionAnalysis?.heatmapImage) return sessionAnalysis.heatmapImage;
+  const getHeatmapImage = (): { type: 'base64' | 'url'; value: string } | null => {
+    // Fresh result from session (just screened)
+    if (sessionAnalysis?.heatmapImage) return { type: 'base64', value: sessionAnalysis.heatmapImage };
+    // Past result loaded from database
+    if (screening?.heatmap_url) return { type: 'url', value: screening.heatmap_url };
     return null;
   };
 
@@ -359,11 +365,7 @@ export default function ResultsContent() {
   const userName = user?.email ? user.email.split('@')[0] : 'User';
 
   if (!mounted || authLoading || loading) {
-    return (
-      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
-        <div className="text-[#00e5ff]">Loading results...</div>
-      </div>
-    );
+    return <Spinner />;
   }
 
   if (!user) return null;
@@ -472,7 +474,7 @@ export default function ResultsContent() {
           <div className="bg-[#111] border border-[rgba(255,255,255,0.07)] rounded-[14px] p-6">
             <div className="font-['Syne'] font-bold text-[0.95rem] mb-5">AI Visual Highlight</div>
             {(() => {
-              const heatmapImage = getHeatmapImage();
+              const heatmapData = getHeatmapImage();
               const allScores = getAllScores();
               const scoreEntries = Object.entries(allScores).filter(([_, v]) => v > 0.05).sort((a, b) => b[1] - a[1]);
               const hasScores = scoreEntries.length > 0;
@@ -487,13 +489,16 @@ export default function ResultsContent() {
               const currentRisk = riskColors[riskLevel];
               
               // If we have a heatmap image, display it
-              if (heatmapImage) {
+              if (heatmapData) {
+                const imgSrc = heatmapData.type === 'base64'
+                  ? `data:image/png;base64,${heatmapData.value}`
+                  : heatmapData.value;
                 return (
                   <>
                     <div className="bg-[#161616] border border-[rgba(255,255,255,0.07)] rounded-xl p-3 overflow-hidden">
                       <div className="relative">
                         <img 
-                          src={`data:image/png;base64,${heatmapImage}`}
+                          src={imgSrc}
                           alt="AI Heatmap Visualization"
                           className="w-full h-auto rounded-lg"
                           style={{ maxHeight: '200px', objectFit: 'contain' }}

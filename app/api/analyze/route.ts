@@ -38,7 +38,7 @@ const CONDITION_INFO: Record<string, {
   calculus: {
     name: "Calculus (Tartar) Buildup",
     description: "Hardened plaque deposits on teeth that can only be removed by professional cleaning",
-    severity: "Medium",
+    severity: "High",
     recommendations: [
       "Schedule a professional dental cleaning as soon as possible",
       "Brush teeth twice daily with fluoride toothpaste",
@@ -117,7 +117,6 @@ function mapPredictionToAnalysis(
   const conditionInfo = CONDITION_INFO[prediction];
   
   if (!conditionInfo) {
-    // Fallback for unknown conditions
     return {
       overallCondition: "Fair",
       confidenceScore: Math.round(confidence),
@@ -135,49 +134,80 @@ function mapPredictionToAnalysis(
     };
   }
 
-  // Determine overall condition based on severity and confidence
+  // IDEA 2: Identify all conditions above 30% threshold
+  const significantConditions = Object.entries(allScores)
+    .filter(([key, score]) => score > 0.30)
+    .sort((a, b) => b[1] - a[1])
+    .map(([key, score]) => ({
+      key,
+      score,
+      info: CONDITION_INFO[key],
+      confidence: score * 100
+    }));
+
+  // IDEA 3: Find the worst severity among significant conditions
+  let worstSeverity: "Low" | "Medium" | "High" = "Low";
+  let worstConditionName = conditionInfo.name;
+  
+  for (const cond of significantConditions) {
+    if (!cond.info) continue;
+    if (cond.info.severity === "High") {
+      worstSeverity = "High";
+      worstConditionName = cond.info.name;
+      break;
+    } else if (cond.info.severity === "Medium" && worstSeverity !== "High") {
+      worstSeverity = "Medium";
+      worstConditionName = cond.info.name;
+    }
+  }
+
+  // Determine overall condition based on worst severity and top confidence
   let overallCondition: "Excellent" | "Good" | "Fair" | "Poor" | "Critical";
-  if (conditionInfo.severity === "High" && confidence > 70) {
+  if (worstSeverity === "High" && confidence > 70) {
     overallCondition = "Poor";
-  } else if (conditionInfo.severity === "High") {
+  } else if (worstSeverity === "High") {
     overallCondition = "Fair";
-  } else if (conditionInfo.severity === "Medium" && confidence > 70) {
+  } else if (worstSeverity === "Medium" && confidence > 70) {
     overallCondition = "Fair";
-  } else if (conditionInfo.severity === "Medium") {
+  } else if (worstSeverity === "Medium") {
     overallCondition = "Good";
   } else {
     overallCondition = confidence > 70 ? "Good" : "Fair";
   }
 
-  // Check for secondary conditions (confidence > 20%)
-  const secondaryConditions = Object.entries(allScores)
-    .filter(([key, score]) => key !== prediction && score > 0.2)
-    .sort((a, b) => b[1] - a[1]);
+  // Build findings list with primary + significant secondaries
+  const findings = significantConditions.map((cond, idx) => ({
+    area: idx === 0 ? "Primary finding" : "Secondary indicator",
+    condition: idx === 0 
+      ? cond.info.description
+      : `${cond.info.name} detected with ${cond.confidence.toFixed(1)}% confidence`,
+    severity: cond.info.severity
+  }));
 
-  const findings = [
-    {
-      area: "Primary finding",
-      condition: conditionInfo.description,
-      severity: conditionInfo.severity
-    },
-    ...secondaryConditions.map(([key, score]) => ({
-      area: "Secondary observation",
-      condition: `Possible ${CONDITION_INFO[key]?.name || key} (${(score * 100).toFixed(1)}% confidence)`,
-      severity: "Low" as const
-    }))
-  ];
+  // Merge all recommendations from significant conditions
+  const allRecommendations = new Set<string>();
+  significantConditions.forEach(cond => {
+    if (cond.info) {
+      cond.info.recommendations.forEach(rec => allRecommendations.add(rec));
+    }
+  });
 
-  const summary = `The AI analysis has detected ${conditionInfo.name} with ${confidence.toFixed(1)}% confidence. ${conditionInfo.description}. ${
-    secondaryConditions.length > 0
-      ? `Additionally, there are minor indicators of ${secondaryConditions.map(([k]) => CONDITION_INFO[k]?.name || k).join(" and ")}.`
-      : ""
-  } It is recommended to consult with a dental professional for proper diagnosis and treatment planning.`;
+  // Build summary mentioning all significant conditions
+  const primaryText = `The AI analysis has detected ${conditionInfo.name} with ${confidence.toFixed(1)}% confidence as the primary finding.`;
+  const secondaryText = significantConditions.length > 1
+    ? ` Additionally, the model detected indicators of ${significantConditions.slice(1).map(c => `${c.info.name} (${c.confidence.toFixed(1)}%)`).join(" and ")}.`
+    : "";
+  const riskText = worstSeverity === "High"
+    ? " Due to the presence of high-severity indicators, professional dental consultation is strongly recommended."
+    : " It is recommended to consult with a dental professional for proper diagnosis and treatment planning.";
+
+  const summary = primaryText + secondaryText + riskText;
 
   return {
     overallCondition,
     confidenceScore: Math.round(confidence),
     findings,
-    recommendations: conditionInfo.recommendations,
+    recommendations: Array.from(allRecommendations).slice(0, 5),
     summary
   };
 }
@@ -236,12 +266,21 @@ export async function POST(req: Request) {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("Python API error:", errorData);
+        // Surface the dental validator rejection message cleanly
+        if (response.status === 422 && errorData?.detail?.error === 'invalid_image') {
+          throw new Error(errorData.detail.message);
+        }
         throw new Error(errorData.detail || "Failed to analyze image");
       }
 
       data = await response.json();
     } catch (fetchError) {
-      // If backend is not available, use mock data for testing
+      // Only fall back to mock if it's a connection error (backend not running)
+      // Never fall back to mock for validation rejections or real API errors
+      const isConnectionError = fetchError instanceof TypeError && fetchError.message.includes('fetch');
+      if (!isConnectionError) {
+        throw fetchError;
+      }
       console.log("Python backend not available, using mock data for testing");
       data = mockPredict();
     }
@@ -261,11 +300,9 @@ export async function POST(req: Request) {
     return Response.json({ analysis });
   } catch (error) {
     console.error("Analysis error:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
     return Response.json(
-      {
-        error: "Failed to analyze image",
-        detail: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: message },
       { status: 500 }
     );
   }

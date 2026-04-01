@@ -23,6 +23,8 @@ interface Screening {
   image_url?: string;
 }
 
+import Spinner from '@/components/spinner'
+
 export default function SettingsPage() {
   const { user, loading: authLoading, signOut } = useAuth();
   const router = useRouter();
@@ -353,11 +355,7 @@ export default function SettingsPage() {
   };
 
   if (!mounted || authLoading || loadingData) {
-    return (
-      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
-        <div className="text-[#00e5ff]">Loading...</div>
-      </div>
-    );
+    return <Spinner />;
   }
 
   if (!user) {
@@ -480,7 +478,7 @@ export default function SettingsPage() {
               disabled={updatingPassword}
               className="bg-[#00e5ff] text-black px-6 py-2.5 rounded-[10px] font-['Syne'] font-bold text-[0.88rem] cursor-pointer hover:opacity-90 transition-opacity inline-flex items-center gap-2 disabled:opacity-50"
             >
-              🔒 {updatingPassword ? 'Updating...' : 'Update Password'}
+              {updatingPassword ? 'Updating...' : 'Update Password'}
             </button>
           </div>
         </div>
@@ -489,7 +487,7 @@ export default function SettingsPage() {
         <div className="bg-[#111] border border-[rgba(255,255,255,0.07)] rounded-[16px] overflow-hidden mb-6">
           <div className="px-5 py-4 border-b border-[rgba(255,255,255,0.07)] flex items-center gap-3">
             <div className="w-9 h-9 rounded-[10px] bg-[rgba(52,211,153,0.1)] border border-[rgba(52,211,153,0.15)] flex items-center justify-center text-[1rem]">
-              📦
+              🗂️
             </div>
             <div>
               <h2 className="font-['Syne'] font-bold text-[0.95rem] text-[#f0f0f0]">Data & Privacy</h2>
@@ -529,7 +527,7 @@ export default function SettingsPage() {
         <div className="bg-[#111] border border-[rgba(255,255,255,0.07)] rounded-[16px] overflow-hidden mb-6">
           <div className="px-5 py-4 border-b border-[rgba(255,255,255,0.07)] flex items-center gap-3">
             <div className="w-9 h-9 rounded-[10px] bg-[rgba(249,115,22,0.1)] border border-[rgba(249,115,22,0.15)] flex items-center justify-center text-[1rem]">
-              🔔
+              ⚙️
             </div>
             <div>
               <h2 className="font-['Syne'] font-bold text-[0.95rem] text-[#f0f0f0]">Preferences</h2>
@@ -574,7 +572,7 @@ export default function SettingsPage() {
         <div className="bg-[rgba(248,113,113,0.03)] border border-[rgba(248,113,113,0.13)] rounded-[16px] overflow-hidden mb-6">
           <div className="px-5 py-4 border-b border-[rgba(248,113,113,0.1)] flex items-center gap-3">
             <div>
-              <h2 className="font-['Syne'] font-bold text-[0.95rem] text-[#f87171]">⚠️ Danger Zone</h2>
+              <h2 className="font-['Syne'] font-bold text-[0.95rem] text-[#f87171]">Danger Zone</h2>
               <p className="text-[#666] text-[0.78rem] mt-0.5">These actions are permanent and cannot be undone. Please proceed with caution.</p>
             </div>
           </div>
@@ -609,9 +607,7 @@ export default function SettingsPage() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-8">
           <div className="bg-[#111] border border-[rgba(248,113,113,0.2)] rounded-[20px] p-10 max-w-[420px] w-full text-center">
-            <div className="text-[2.5rem] mb-4">
-              {modalType === 'account' ? '⚠️' : '🗑️'}
-            </div>
+            <div className="text-[2.5rem] mb-4"></div>
             <h3 className="font-['Syne'] font-extrabold text-[1.2rem] text-[#f0f0f0] mb-2">
               {modalType === 'account' ? 'Delete Your Account?' : 'Delete All Screening Data?'}
             </h3>
@@ -644,7 +640,6 @@ export default function SettingsPage() {
       <div 
         className={`fixed bottom-8 right-8 bg-[rgba(52,211,153,0.12)] border border-[rgba(52,211,153,0.25)] rounded-[12px] px-5 py-3.5 flex items-center gap-2 text-[0.85rem] text-[#34d399] transition-transform duration-300 z-[999] ${showToast ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}
       >
-        <span>✅</span>
         <span>{toastMessage}</span>
       </div>
     </div>

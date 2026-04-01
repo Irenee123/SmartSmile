@@ -24,6 +24,8 @@ interface Screening {
   model_version: string;
 }
 
+import Spinner from '@/components/spinner'
+
 export default function HistoryPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -109,11 +111,7 @@ export default function HistoryPage() {
   };
 
   if (!mounted || authLoading || loading) {
-    return (
-      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
-        <div className="text-[#00e5ff]">Loading...</div>
-      </div>
-    );
+    return <Spinner />;
   }
 
   if (!user) {
@@ -131,7 +129,7 @@ export default function HistoryPage() {
             <p className="text-[#666] text-[0.88rem] mt-1">Track and review all your past oral health screenings.</p>
           </div>
           <Link href="/screening" className="bg-[#00e5ff] text-black px-5 py-2.5 rounded-lg font-['Syne'] font-bold text-[0.85rem] no-underline hover:opacity-90 transition-opacity inline-flex items-center gap-2">
-            📷 New Screening
+            New Screening
           </Link>
         </div>
 
@@ -240,7 +238,7 @@ export default function HistoryPage() {
           </select>
           <input 
             type="text" 
-            placeholder="🔍 Search indicators…" 
+            placeholder="Search indicators…" 
             className="bg-[#111] border border-[rgba(255,255,255,0.07)] rounded-lg px-4 py-2 text-[#f0f0f0] font-sans text-[0.82rem] w-52 outline-none"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -310,7 +308,7 @@ export default function HistoryPage() {
           </div>
         ) : (
           <div className="text-center py-16 text-[#666]">
-            <div className="text-4xl mb-4 opacity-40">📊</div>
+            <div className="text-4xl mb-4 opacity-40"></div>
             <h3 className="font-['Syne'] font-bold text-[#f0f0f0] mb-2">No Screenings Found</h3>
             <p className="text-[0.88rem] leading-relaxed">
               {screenings.length === 0 
@@ -319,7 +317,7 @@ export default function HistoryPage() {
             </p>
             {screenings.length === 0 && (
               <Link href="/screening" className="inline-block mt-4 bg-[#00e5ff] text-black px-5 py-2 rounded-lg font-['Syne'] font-bold text-[0.85rem] no-underline hover:opacity-90 transition-opacity">
-                📷 Start First Screening
+                Start First Screening
               </Link>
             )}
           </div>

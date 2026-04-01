@@ -62,6 +62,8 @@ const parseHours = (h: string): { day: string; time: string }[] => {
   return result.length > 0 ? result : [{ day: 'Monday – Friday', time: h }];
 };
 
+import Spinner from '@/components/spinner'
+
 export default function FindDentistPage() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
@@ -110,7 +112,7 @@ export default function FindDentistPage() {
   const userName = user?.email ? user.email.split('@')[0] : 'User';
 
   if (!mounted || authLoading) {
-    return <div className="min-h-screen bg-[#080808] flex items-center justify-center"><div className="text-[#00e5ff]">Loading...</div></div>;
+    return <Spinner />
   }
   if (!user) return null;
 
@@ -160,9 +162,7 @@ export default function FindDentistPage() {
         ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-10">
             {filtered.map(clinic => (
-              <div key={clinic.id} className="bg-[#111] border border-[rgba(255,255,255,0.07)] rounded-[14px] overflow-hidden cursor-pointer transition-all hover:border-[rgba(0,229,255,0.2)] hover:-translate-y-0.5">
-                {/* Card top accent */}
-                <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, #00e5ff, #a855f7)' }} />
+              <div key={clinic.id} className="bg-[#111] border border-[rgba(255,255,255,0.07)] rounded-[14px] overflow-hidden cursor-pointer transition-all hover:border-[rgba(255,255,255,0.13)] hover:-translate-y-0.5">
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div>
@@ -171,9 +171,9 @@ export default function FindDentistPage() {
                     </div>
                   </div>
                   <div className="flex flex-col gap-1.5 mb-4">
-                    <div className="flex items-center gap-2 text-[#666] text-[0.78rem]"><span>📍</span>{clinic.location}</div>
-                    <div className="flex items-center gap-2 text-[#666] text-[0.78rem]"><span>📞</span>{clinic.phone}</div>
-                    <div className="flex items-center gap-2 text-[#666] text-[0.78rem]"><span>🕐</span>{clinic.hours}</div>
+                    <div className="flex items-center gap-2 text-[#666] text-[0.78rem]"><span>📌</span>{clinic.location}</div>
+                    <div className="flex items-center gap-2 text-[#666] text-[0.78rem]"><span>✆</span>{clinic.phone}</div>
+                    <div className="flex items-center gap-2 text-[#666] text-[0.78rem]"><span>🕰</span>{clinic.hours}</div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 mb-4">
                     {clinic.tags.slice(0, 4).map(tag => (
@@ -182,7 +182,7 @@ export default function FindDentistPage() {
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => setSelected(clinic)} className="flex-1 py-2 rounded-[8px] text-[0.78rem] font-bold text-[#00e5ff] border border-[rgba(0,229,255,0.2)] bg-[rgba(0,229,255,0.06)] hover:bg-[rgba(0,229,255,0.12)] transition-colors" style={{ fontFamily: "'Syne', sans-serif" }}>View Details →</button>
-                    <a href={`tel:${clinic.phone.replace(/\s/g, '')}`} onClick={e => e.stopPropagation()} className="px-4 py-2 rounded-[8px] text-[0.78rem] font-bold text-[#34d399] border border-[rgba(52,211,153,0.2)] bg-[rgba(52,211,153,0.06)] hover:bg-[rgba(52,211,153,0.12)] transition-colors" style={{ fontFamily: "'Syne', sans-serif" }}>📞 Call</a>
+                    <a href={`tel:${clinic.phone.replace(/\s/g, '')}`} onClick={e => e.stopPropagation()} className="px-4 py-2 rounded-[8px] text-[0.78rem] font-bold text-[#34d399] border border-[rgba(52,211,153,0.2)] bg-[rgba(52,211,153,0.06)] hover:bg-[rgba(52,211,153,0.12)] transition-colors" style={{ fontFamily: "'Syne', sans-serif" }}>Call</a>
                   </div>
                 </div>
               </div>
@@ -195,8 +195,6 @@ export default function FindDentistPage() {
       {selected && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-6" onClick={e => { if (e.target === e.currentTarget) setSelected(null); }}>
           <div className="bg-[#0e0e10] border border-[rgba(255,255,255,0.1)] rounded-[20px] w-full max-w-[660px] overflow-hidden">
-            {/* Modal header accent */}
-            <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, #00e5ff, #a855f7)' }} />
             <div className="p-7">
               {/* Header */}
               <div className="flex justify-between items-start mb-6">
@@ -210,10 +208,10 @@ export default function FindDentistPage() {
               {/* Contact info */}
               <div className="grid grid-cols-2 gap-3 mb-5">
                 {[
-                  { icon: '📍', label: 'Location', value: selected.location },
-                  { icon: '📞', label: 'Phone', value: selected.phone },
-                  { icon: '✉️', label: 'Email', value: selected.email || '—' },
-                  { icon: '🌐', label: 'Website', value: selected.website || '—', cyan: true },
+                  { icon: '📌', label: 'Location', value: selected.location },
+                  { icon: '✆', label: 'Phone', value: selected.phone },
+                  { icon: '✉', label: 'Email', value: selected.email || '—' },
+                  { icon: '⊕', label: 'Website', value: selected.website || '—', cyan: true },
                 ].map(item => (
                   <div key={item.label} className="bg-[#111] border border-[rgba(255,255,255,0.06)] rounded-[10px] px-4 py-3">
                     <div className="text-[0.65rem] text-[#555] mb-1">{item.icon} {item.label}</div>
@@ -247,8 +245,8 @@ export default function FindDentistPage() {
 
               {/* Actions */}
               <div className="flex gap-3">
-                <a href={`tel:${selected.phone.replace(/\s/g, '')}`} className="flex-1 py-3 rounded-[10px] text-center font-bold text-[0.88rem] text-black bg-[#34d399] hover:opacity-90 transition-opacity" style={{ fontFamily: "'Syne', sans-serif", textDecoration: 'none' }}>📞 Call Now</a>
-                <a href={selected.bookingUrl} target="_blank" rel="noopener noreferrer" className="flex-[1.5] py-3 rounded-[10px] text-center font-bold text-[0.88rem] text-black hover:opacity-90 transition-opacity" style={{ fontFamily: "'Syne', sans-serif", background: 'linear-gradient(135deg, #00e5ff, #a855f7)', textDecoration: 'none' }}>🔗 Book Appointment</a>
+                <a href={`tel:${selected.phone.replace(/\s/g, '')}`} className="flex-1 py-3 rounded-[10px] text-center font-bold text-[0.88rem] text-black bg-[#34d399] hover:opacity-90 transition-opacity" style={{ fontFamily: "'Syne', sans-serif", textDecoration: 'none' }}>Call Now</a>
+                <a href={selected.bookingUrl} target="_blank" rel="noopener noreferrer" className="flex-[1.5] py-3 rounded-[10px] text-center font-bold text-[0.88rem] text-black bg-[#00e5ff] hover:opacity-90 transition-opacity" style={{ fontFamily: "'Syne', sans-serif", textDecoration: 'none' }}>Book Appointment</a>
               </div>
             </div>
           </div>

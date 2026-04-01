@@ -24,6 +24,8 @@ interface AnalysisResult {
   summary: string;
 }
 
+import Spinner from '@/components/spinner'
+
 export default function ScreeningPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -149,7 +151,7 @@ export default function ScreeningPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to analyze image');
+        throw new Error(errorData.error || errorData.detail || 'Failed to analyze image');
       }
 
       const data = await response.json();
@@ -186,14 +188,46 @@ const saveScreeningResult = async (analysis: AnalysisResult) => {
     .map(f => f.condition.split('(')[0].trim())
     .slice(0, 3);
 
+  const primaryLabel = (analysis as any).primaryPrediction
+    ? (analysis as any).primaryPrediction.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
+    : null;
+  const finalIndicators = primaryLabel ? [primaryLabel, ...indicators.filter(i => i !== primaryLabel)].slice(0, 3) : indicators;
+
+  // Upload Grad-CAM heatmap to Supabase Storage if available
+  let heatmapUrl: string | null = null;
+  const heatmapBase64 = (analysis as any).heatmapImage;
+  if (heatmapBase64) {
+    try {
+      const byteString = atob(heatmapBase64);
+      const byteArray = new Uint8Array(byteString.length);
+      for (let i = 0; i < byteString.length; i++) {
+        byteArray[i] = byteString.charCodeAt(i);
+      }
+      const blob = new Blob([byteArray], { type: 'image/png' });
+      const fileName = `${user.id}/${Date.now()}.png`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('heatmaps')
+        .upload(fileName, blob, { contentType: 'image/png', upsert: false });
+      if (!uploadError && uploadData) {
+        const { data: urlData } = supabase.storage.from('heatmaps').getPublicUrl(fileName);
+        heatmapUrl = urlData.publicUrl;
+      } else {
+        console.error('Heatmap upload error:', uploadError);
+      }
+    } catch (e) {
+      console.error('Heatmap upload failed:', e);
+    }
+  }
+
   const { error: dbError } = await supabase.from('screenings').insert({
     user_id: user.id,
     risk_level: riskLevel,
     confidence_score: analysis.confidenceScore,
-    indicators: indicators,
+    indicators: finalIndicators,
     recommendations: analysis.recommendations,
     model_version: 'v2.1.0',
     image_path: `screening-images/${user.id}/${Date.now()}.jpg`,
+    heatmap_url: heatmapUrl,
     is_deleted: false
   });
 
@@ -201,8 +235,6 @@ const saveScreeningResult = async (analysis: AnalysisResult) => {
     console.error('Error saving screening result:', JSON.stringify(dbError, null, 2));
   } else {
     console.log('Screening result saved successfully!');
-    // Result is saved - user can view it on the results page
-    // No email is sent to user
   }
 };
 
@@ -211,11 +243,7 @@ const saveScreeningResult = async (analysis: AnalysisResult) => {
   };
 
   if (!mounted || authLoading) {
-    return (
-      <div className="min-h-screen bg-[#080808] flex items-center justify-center">
-        <div className="text-[#00e5ff]">Loading...</div>
-      </div>
-    );
+    return <Spinner />;
   }
 
   if (!user) {
@@ -271,13 +299,13 @@ const saveScreeningResult = async (analysis: AnalysisResult) => {
               ref={fileInputRef}
               className="hidden"
             />
-            <div className="w-[72px] h-[72px] rounded-[20px] bg-[rgba(0,229,255,0.08)] border border-[rgba(0,229,255,0.15)] flex items-center justify-center text-[2rem] mx-auto mb-6">
-              📷
+            <div className="w-[72px] h-[72px] rounded-[20px] bg-[rgba(0,229,255,0.08)] border border-[rgba(0,229,255,0.15)] flex items-center justify-center mx-auto mb-6 text-[2rem]">
+              📁
             </div>
             <h3 className="font-['Syne'] font-bold text-[1.15rem] mb-2">Drag & drop your image here</h3>
             <p className="text-[#666] text-[0.88rem] mb-4">or click anywhere in this box to browse your files</p>
             <div className="inline-flex items-center gap-2 bg-[rgba(0,229,255,0.08)] border border-[rgba(0,229,255,0.2)] text-[#00e5ff] rounded-lg px-4 py-2 text-[0.85rem] font-semibold">
-              📁 Browse Files
+              Browse Files
             </div>
             <div className="flex gap-2 justify-center mt-4 flex-wrap">
               <span className="bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.07)] rounded-md px-3 py-1 text-[0.7rem] text-[#666]">JPG</span>
@@ -342,7 +370,6 @@ const saveScreeningResult = async (analysis: AnalysisResult) => {
           <div className="text-center p-14 bg-[#111] border border-[rgba(255,255,255,0.07)] rounded-4xl mt-6">
             <div className="relative w-16 h-16 mx-auto mb-6">
               <div className="w-16 h-16 border-3 border-[rgba(0,229,255,0.1)] border-t-[#00e5ff] rounded-full animate-spin"></div>
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[1.4rem]">🦷</div>
             </div>
             <h3 className="font-['Syne'] font-bold text-[1.1rem] mb-2">Analyzing Your Image…</h3>
             <p className="text-[#666] text-[0.88rem] max-w-[380px] mx-auto mb-3">Our AI is examining your dental photo for oral health indicators. This usually takes under 30 seconds.</p>
@@ -365,8 +392,28 @@ const saveScreeningResult = async (analysis: AnalysisResult) => {
 
         {/* Error Message */}
         {error && (
-          <div className="mt-6 p-4 bg-[rgba(248,113,113,0.1)] border border-[rgba(248,113,113,0.2)] rounded-xl text-[#f87171] text-sm">
-            {error}
+          <div className="mt-6 rounded-[16px] overflow-hidden border border-[rgba(248,113,113,0.2)] bg-[rgba(248,113,113,0.04)]">
+            <div className="h-1 w-full bg-[#f87171]" />
+            <div className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-[10px] bg-[rgba(248,113,113,0.12)] border border-[rgba(248,113,113,0.2)] flex items-center justify-center flex-shrink-0">
+                  <span className="text-[#f87171] font-bold text-[1rem]">✕</span>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-['Syne'] font-bold text-[0.95rem] text-[#f87171] mb-1">Image Not Accepted</h4>
+                  <p className="text-[#aaa] text-[0.85rem] leading-[1.65]">{error}</p>
+                </div>
+              </div>
+              <div className="mt-5 pt-4 border-t border-[rgba(248,113,113,0.1)] flex items-center justify-between flex-wrap gap-3">
+                <p className="text-[#666] text-[0.78rem]">Make sure your photo clearly shows your teeth and gums.</p>
+                <button
+                  onClick={() => { removeImage(); setError(null); }}
+                  className="bg-[#f87171] text-black rounded-[8px] px-5 py-2 text-[0.82rem] font-['Syne'] font-bold cursor-pointer hover:opacity-90 transition-opacity whitespace-nowrap"
+                >
+                  Try a Different Image
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -377,25 +424,25 @@ const saveScreeningResult = async (analysis: AnalysisResult) => {
             disabled={uploading}
             className="w-full bg-[#00e5ff] text-black border-none rounded-xl py-4 font-['Syne'] font-bold text-[1rem] cursor-pointer transition-all mt-6 flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-35 disabled:cursor-not-allowed"
           >
-            🔍 Submit for Analysis
+            Submit for Analysis
           </button>
         )}
 
         {/* Tips */}
         {!analyzing && (
           <div className="mt-12">
-            <div className="font-['Syne'] font-bold text-[0.95rem] mb-4">📌 Tips for Best Results</div>
+            <div className="font-['Syne'] font-bold text-[0.95rem] mb-4">Tips for Best Results</div>
             <div className="grid grid-cols-3 gap-4">
               <div className="bg-[#161616] border border-[rgba(255,255,255,0.07)] rounded-xl p-5 hover:border-[rgba(0,229,255,0.15)] transition-colors">
-                <div className="text-[#00e5ff] font-semibold text-[0.83rem] mb-2 flex items-center gap-2">💡 Good Lighting</div>
+                <div className="text-[#00e5ff] font-semibold text-[0.83rem] mb-2 flex items-center gap-2">Good Lighting</div>
                 <p className="text-[#666] text-[0.78rem] leading-[1.55]">Take your photo in natural daylight or a well-lit room. Avoid dark environments or harsh flash shadows.</p>
               </div>
               <div className="bg-[#161616] border border-[rgba(255,255,255,0.07)] rounded-xl p-5 hover:border-[rgba(0,229,255,0.15)] transition-colors">
-                <div className="text-[#00e5ff] font-semibold text-[0.83rem] mb-2 flex items-center gap-2">📐 Correct Angle</div>
+                <div className="text-[#00e5ff] font-semibold text-[0.83rem] mb-2 flex items-center gap-2">Correct Angle</div>
                 <p className="text-[#666] text-[0.78rem] leading-[1.55]">Open wide and aim your camera directly at your front teeth. Hold the phone steady at mouth level.</p>
               </div>
               <div className="bg-[#161616] border border-[rgba(255,255,255,0.07)] rounded-xl p-5 hover:border-[rgba(0,229,255,0.15)] transition-colors">
-                <div className="text-[#00e5ff] font-semibold text-[0.83rem] mb-2 flex items-center gap-2">🔍 Sharp Focus</div>
+                <div className="text-[#00e5ff] font-semibold text-[0.83rem] mb-2 flex items-center gap-2">Sharp Focus</div>
                 <p className="text-[#666] text-[0.78rem] leading-[1.55]">Make sure the image is in focus and not blurry. Tap your screen to focus before capturing the photo.</p>
               </div>
             </div>

@@ -11,8 +11,9 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        display: ['var(--font-space-grotesk)', 'system-ui', 'sans-serif'],
+        sans: ['ui-sans-serif', 'system-ui', 'sans-serif'],
+        Syne: ['var(--font-syne)', 'system-ui', 'sans-serif'],
+        DM_Sans: ['ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       colors: {
         warning: {

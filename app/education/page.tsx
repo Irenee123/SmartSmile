@@ -108,22 +108,22 @@ export default function EducationPage() {
   const userName = user.email ? user.email.split('@')[0] : 'User';
 
   return (
-    <div className="min-h-screen bg-[#080808] flex" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="min-h-screen bg-[#080808] flex" style={{ fontFamily: "sans-serif" }}>
       <Sidebar />
       <main className="md:ml-[240px] flex-1 p-4 md:p-10 pt-20 md:pt-10 max-w-full md:max-w-[calc(100vw-240px)]">
-        <h1 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '1.5rem', marginBottom: '0.3rem' }}>Education Hub</h1>
+        <h1 style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 800, fontSize: '1.5rem', marginBottom: '0.3rem' }}>Education Hub</h1>
         <p className="text-[#666] text-[0.9rem] mb-8" style={{ lineHeight: 1.6 }}>Learn about oral health, proper hygiene techniques, and how AI-powered screening works.</p>
 
         {/* Search */}
         <div className="relative mb-6 max-w-[520px]" style={{ position: 'relative', marginBottom: '1.5rem', maxWidth: '520px' }}>
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#666]" style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#666', fontSize: '1rem' }}>🔍</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#666]" style={{ position: 'absolute', left: '0.9rem', top: '50%', transform: 'translateY(-50%)', color: '#666', fontSize: '1rem' }}></span>
           <input 
             type="text" 
             placeholder="Search articles, tips, FAQs…"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-[#111] border border-[rgba(255,255,255,0.07)] rounded-xl py-3 px-4 pl-10 text-[#f0f0f0] text-[0.9rem] outline-none"
-            style={{ width: '100%', background: '#111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '0.8rem 1rem 0.8rem 2.8rem', color: '#f0f0f0', fontFamily: "'DM Sans', sans-serif", fontSize: '0.9rem', outline: 'none' }}
+            style={{ width: '100%', background: '#111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '0.8rem 1rem 0.8rem 2.8rem', color: '#f0f0f0', fontFamily: "sans-serif", fontSize: '0.9rem', outline: 'none' }}
           />
         </div>
 
@@ -154,7 +154,7 @@ export default function EducationPage() {
               <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-[2.2rem]" style={{ width: '80px', height: '80px', minWidth: '80px', borderRadius: '16px', background: 'rgba(0,229,255,0.08)', border: '1px solid rgba(0,229,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem' }}>{featured.thumbnail}</div>
               <div>
                 <span className="text-[0.68rem] uppercase text-[#00e5ff] bg-[rgba(0,229,255,0.08)] border border-[rgba(0,229,255,0.15)] px-2 py-1 rounded-full mb-2 inline-block" style={{ display: 'inline-block', fontSize: '0.68rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#00e5ff', background: 'rgba(0,229,255,0.08)', border: '1px solid rgba(0,229,255,0.15)', padding: '0.2rem 0.6rem', borderRadius: '100px', marginBottom: '0.5rem' }}>Featured Article</span>
-                <h2 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '1.15rem', marginBottom: '0.4rem' }}>{featured.title}</h2>
+                <h2 style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 800, fontSize: '1.15rem', marginBottom: '0.4rem' }}>{featured.title}</h2>
                 <p className="text-[#666] text-[0.88rem]" style={{ color: '#666', fontSize: '0.88rem', lineHeight: 1.65, maxWidth: '500px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{featured.description}</p>
                 <div className="flex items-center gap-4 mt-3">
                   <span style={{ color: '#666', fontSize: '0.83rem' }}>{featured.read_time}</span>
@@ -168,37 +168,37 @@ export default function EducationPage() {
         {/* Tips Banner */}
         <div className="grid grid-cols-4 gap-4 mb-8 bg-[#161616] border border-[rgba(255,255,255,0.07)] rounded-2xl p-6" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem', background: '#161616', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '1.5rem' }}>
           <div className="text-center p-2" style={{ textAlign: 'center', padding: '0.5rem' }}>
-            <div className="text-[1.8rem] mb-2">🪥</div>
-            <h4 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '0.82rem', marginBottom: '0.25rem' }}>Brush 2x Daily</h4>
+            <div className="text-[1.8rem] mb-2"></div>
+            <h4 style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700, fontSize: '0.82rem', marginBottom: '0.25rem' }}>Brush 2x Daily</h4>
             <p className="text-[#666] text-[0.73rem]" style={{ color: '#666', fontSize: '0.73rem', lineHeight: 1.5 }}>Morning and night for at least 2 minutes each session</p>
           </div>
           <div className="text-center p-2" style={{ textAlign: 'center', padding: '0.5rem' }}>
-            <div className="text-[1.8rem] mb-2">🧵</div>
-            <h4 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '0.82rem', marginBottom: '0.25rem' }}>Floss Daily</h4>
+            <div className="text-[1.8rem] mb-2"></div>
+            <h4 style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700, fontSize: '0.82rem', marginBottom: '0.25rem' }}>Floss Daily</h4>
             <p className="text-[#666] text-[0.73rem]" style={{ color: '#666', fontSize: '0.73rem', lineHeight: 1.5 }}>Once before bed removes plaque brushing misses</p>
           </div>
           <div className="text-center p-2" style={{ textAlign: 'center', padding: '0.5rem' }}>
-            <div className="text-[1.8rem] mb-2">💧</div>
-            <h4 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '0.82rem', marginBottom: '0.25rem' }}>Stay Hydrated</h4>
+            <div className="text-[1.8rem] mb-2"></div>
+            <h4 style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700, fontSize: '0.82rem', marginBottom: '0.25rem' }}>Stay Hydrated</h4>
             <p className="text-[#666] text-[0.73rem]" style={{ color: '#666', fontSize: '0.73rem', lineHeight: 1.5 }}>Water flushes bacteria and supports saliva production</p>
           </div>
           <div className="text-center p-2" style={{ textAlign: 'center', padding: '0.5rem' }}>
-            <div className="text-[1.8rem] mb-2">📅</div>
-            <h4 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '0.82rem', marginBottom: '0.25rem' }}>Visit Dentist</h4>
+            <div className="text-[1.8rem] mb-2"></div>
+            <h4 style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700, fontSize: '0.82rem', marginBottom: '0.25rem' }}>Visit Dentist</h4>
             <p className="text-[#666] text-[0.73rem]" style={{ color: '#666', fontSize: '0.73rem', lineHeight: 1.5 }}>Professional cleaning every 6 months minimum</p>
           </div>
         </div>
 
         {/* Articles Grid */}
         <div className="flex justify-between items-center mb-5">
-          <h3 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '1rem', marginBottom: '1.2rem' }}>Latest Articles</h3>
+          <h3 style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 800, fontSize: '1rem', marginBottom: '1.2rem' }}>Latest Articles</h3>
           <span className="text-[#666] text-[0.78rem]">{filteredArticles.length} article{filteredArticles.length !== 1 ? 's' : ''}</span>
         </div>
         {loadingArticles ? (
           <div className="text-center py-16 text-[#666] text-[0.88rem]">Loading articles...</div>
         ) : filteredArticles.length === 0 ? (
           <div className="text-center py-16">
-            <div className="text-4xl mb-4 opacity-40">📚</div>
+            <div className="text-4xl mb-4 opacity-40"></div>
             <p className="text-[#666] text-[0.88rem]">No articles available yet. Check back soon.</p>
           </div>
         ) : (
@@ -212,7 +212,7 @@ export default function EducationPage() {
                 </span>
               </div>
               <div className="p-5" style={{ padding: '1.2rem' }}>
-                <h4 className="font-bold text-[0.9rem] mb-1" style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '0.9rem', lineHeight: 1.35, marginBottom: '0.4rem' }}>{article.title}</h4>
+                <h4 className="font-bold text-[0.9rem] mb-1" style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700, fontSize: '0.9rem', lineHeight: 1.35, marginBottom: '0.4rem' }}>{article.title}</h4>
                 <p className="text-[#666] text-[0.78rem]" style={{ color: '#666', fontSize: '0.78rem', lineHeight: 1.55, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{article.description}</p>
                 <Link href={`/education/${article.id}`} className="text-[#00e5ff] text-[0.72rem] font-semibold mt-1 inline-block hover:opacity-75 transition-opacity">Read article →</Link>
                 <div className="flex justify-between text-[#666] text-[0.72rem] mt-3" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.8rem', color: '#666', fontSize: '0.72rem' }}>
@@ -226,7 +226,7 @@ export default function EducationPage() {
         )}
 
         {/* FAQ */}
-        <h3 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: '1rem', marginBottom: '1.2rem' }}>Frequently Asked Questions</h3>
+        <h3 style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 800, fontSize: '1rem', marginBottom: '1.2rem' }}>Frequently Asked Questions</h3>
         <div className="flex flex-col gap-2 mb-8" style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '2rem' }}>
           {[
             { id: 'faq1', q: 'Is SmartSmile a replacement for seeing a dentist?', a: 'No. SmartSmile is a preventive screening tool only. It detects visible surface indicators to raise awareness of potential issues. It does not replace clinical examination, diagnosis, or treatment by a qualified dental professional. Always consult a dentist for proper care.' },
